@@ -83,9 +83,9 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 			let breadcrumbs;
 
 			for (const breadcrumbsClass of breadcrumbsClasses) {
-				const el = contentContainer.find($(`${breadcrumbsClass}:has(a)`));
+				const item = contentContainer.find($(`${breadcrumbsClass}:has(a)`));
 				if (item.length > 0) {
-					breadcrumbs = el.text().trim();
+					breadcrumbs = item.text().trim();
 					break;
 				}
 			}

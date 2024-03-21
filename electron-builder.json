@@ -49,6 +49,7 @@
 	"publish": {
 		"provider": "github",
 		"owner": "maximyut",
-		"repo": "seo-app",
+		"repo": "seo-app"
+
 	}
 }

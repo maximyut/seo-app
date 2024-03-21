@@ -13,6 +13,7 @@ import Catalog from "./Components/Catalog";
 function StartPage() {
 	return (
 		<Grid container direction="column" spacing={2} sx={{ height: "100%" }} wrap="nowrap">
+			<div>New version</div>
 			<Grid xs={12} flexGrow={7} flexShrink={7}>
 				<Catalog />
 			</Grid>

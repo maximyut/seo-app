@@ -4,7 +4,6 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-// eslint-disable-next-line react/prop-types
 export default function AccordionUsage({ title, children }) {
 	return (
 		<Accordion>

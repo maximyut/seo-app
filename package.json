@@ -5,7 +5,7 @@
 		"name": "Maksim Cheshka",
 		"email": "maximyut.ite@gmail.com"
 	},
-	"repository": "https://github.com/maximyut/seo-app.git",
+	"repository": "https://github.com/maximyut/seo-app",
 	"main": "./src/main/main.js",
 	"scripts": {
 		"build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
@@ -14,7 +14,7 @@
 		"build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
 		"postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && npm run build:dll",
 		"lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
-		"publishW": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish always -w && npm run build:dll",
+		"release": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish always -w && npm run build:dll",
 		"packageW": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never -w && npm run build:dll",
 		"package": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never && npm run build:dll",
 		"rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
