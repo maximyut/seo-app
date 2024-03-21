@@ -58,14 +58,7 @@ export default function ConfigForm({ config, onConfigChange }) {
 								case "breadcrumbs":
 									helperText += `Сбор навигации ("хлебных крошек") со страницы при возможности. `;
 									break;
-									{
-										/* case "page2":
-									helperText += "Сбор заголовка страницы";
-									break;
-								case "page3":
-									helperText += "Сбор описания страницы";
-									break; */
-									}
+
 								default:
 									label = key;
 									helperText = "";
@@ -88,6 +81,7 @@ export default function ConfigForm({ config, onConfigChange }) {
 								</div>
 							);
 						}
+						return null;
 					})}
 				</FormGroup>
 			</FormControl>
