@@ -1,0 +1,25 @@
+/*
+ * @NOTE: Prepend a `~` to css file paths that are in your node_modules
+ *        See https://github.com/webpack-contrib/sass-loader#imports
+ */
+body {
+	font-family: sans-serif;
+	/* max-height: 100vh; */
+	/* height: 100vh; */
+	margin: 0;
+	/* padding: 10px; */
+	/* overflow: hidden; */
+}
+
+* {
+	box-sizing: border-box;
+}
+
+.console-string {
+	display: grid;
+	grid-template-columns: 180px 1fr;
+}
+
+.text.error {
+	color: red;
+}
