@@ -5,6 +5,7 @@
 		"name": "Maksim Cheshka",
 		"email": "maximyut.ite@gmail.com"
 	},
+	"repository": "https://github.com/maximyut/seo-app.git",
 	"main": "./src/main/main.js",
 	"scripts": {
 		"build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
@@ -13,6 +14,7 @@
 		"build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
 		"postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && npm run build:dll",
 		"lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
+		"publishW": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish always -w && npm run build:dll",
 		"packageW": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never -w && npm run build:dll",
 		"package": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never && npm run build:dll",
 		"rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
@@ -150,74 +152,7 @@
 		"webpack-dev-server": "^4.15.1",
 		"webpack-merge": "^5.9.0"
 	},
-	"build": {
-		"productName": "Seo app",
-		"appId": "org.erb.SeoApp",
-		"asar": true,
-		"asarUnpack": "**\\*.{node,dll}",
-		"files": [
-			"dist",
-			"node_modules",
-			"package.json"
-		],
-		"afterSign": ".erb/scripts/notarize.js",
-		"mac": {
-			"target": {
-				"target": "default",
-				"arch": [
-					"arm64",
-					"x64"
-				]
-			},
-			"type": "distribution",
-			"hardenedRuntime": true,
-			"entitlements": "assets/entitlements.mac.plist",
-			"entitlementsInherit": "assets/entitlements.mac.plist",
-			"gatekeeperAssess": false
-		},
-		"dmg": {
-			"contents": [
-				{
-					"x": 130,
-					"y": 220
-				},
-				{
-					"x": 410,
-					"y": 220,
-					"type": "link",
-					"path": "/Applications"
-				}
-			]
-		},
-		"win": {
-			"target": {
-				"target": "portable",
-				"arch": [
-					"arm64",
-					"x64"
-				]
-			}
-		},
-		"linux": {
-			"target": [
-				"AppImage"
-			],
-			"category": "Development"
-		},
-		"directories": {
-			"app": "release/app",
-			"buildResources": "assets",
-			"output": "release/build"
-		},
-		"extraResources": [
-			"./assets/**"
-		],
-		"publish": {
-			"provider": "github",
-			"owner": "maximyut",
-			"repo": "seo-app"
-		}
-	},
+
 	"devEngines": {
 		"node": ">=14.x",
 		"npm": ">=7.x"
