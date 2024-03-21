@@ -11,4 +11,3 @@ export function resolveHtmlPath(htmlFileName) {
 	}
 	return `file://${path.resolve(__dirname, "../renderer/", htmlFileName)}`;
 }
-
