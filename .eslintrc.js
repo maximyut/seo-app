@@ -11,12 +11,13 @@ module.exports = {
 		"import/no-import-module-exports": "off",
 		"no-shadow": "off",
 		"@typescript-eslint/no-shadow": "error",
-		"no-unused-vars": "off",
-		"@typescript-eslint/no-unused-vars": "error",
+		"no-unused-vars": "warn",
+		"@typescript-eslint/no-unused-vars": "warn",
 		"no-console": "off",
 		"no-await-in-loop": "off",
 		"one-var": "off",
-		"react/jsx-props-no-spreading": "off"
+		"react/jsx-props-no-spreading": "off",
+		"react/function-component-definition": "off",
 	},
 	parserOptions: {
 		ecmaVersion: 2022,

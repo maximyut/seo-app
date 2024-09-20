@@ -4,6 +4,7 @@
 
 import webpack from "webpack";
 import TsconfigPathsPlugins from "tsconfig-paths-webpack-plugin";
+import dotenv from "dotenv";
 import webpackPaths from "./webpack.paths";
 import { dependencies as externals } from "../../release/app/package.json";
 
@@ -52,6 +53,7 @@ const configuration: webpack.Configuration = {
 	plugins: [
 		new webpack.EnvironmentPlugin({
 			NODE_ENV: "production",
+			...dotenv.config().parsed,
 		}),
 	],
 };

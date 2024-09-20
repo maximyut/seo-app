@@ -22,10 +22,11 @@ const deleteEl = (el, oldArray) => {
 
 const useMutation = () => {
 	return useCallback(
-		(newArray, pageNumber) =>
+		(newArray, pageName) =>
 			new Promise((resolve, reject) => {
 				try {
-					window.electron.store.set(`pages.${pageNumber}`, newArray);
+					window.electron.store.set(`pages.${pageName}`, newArray);
+
 					resolve(newArray);
 				} catch (error) {
 					console.error(error);
@@ -37,7 +38,7 @@ const useMutation = () => {
 };
 
 // eslint-disable-next-line react/prop-types
-function BasicTable({ catalog, pageNumber }) {
+function BasicTable({ catalog, pageName }) {
 	const updateCatalog = useMutation();
 
 	const [rows, setRows] = useState(catalog);
@@ -106,7 +107,7 @@ function BasicTable({ catalog, pageNumber }) {
 
 		try {
 			// Make the HTTP request to save in the backend
-			const response = await updateCatalog(newArray, pageNumber);
+			const response = await updateCatalog(newArray, pageName);
 			setRows(response);
 			setSnackbar({ children: "Каталог успешно сохранен", severity: "success" });
 			resolve(response);
@@ -166,6 +167,9 @@ function BasicTable({ catalog, pageNumber }) {
 			}
 			return { field: key, headerName: key, width: 200, editable: true };
 		}),
+		{ field: "text_1", headerName: "Пользовательский текст 1", width: 200, editable: true },
+		{ field: "text_2", headerName: "Пользовательский текст 2", width: 200, editable: true },
+
 		{
 			field: "actions",
 			type: "actions",
@@ -186,17 +190,16 @@ function BasicTable({ catalog, pageNumber }) {
 			},
 		},
 	];
-
 	return (
-		<div style={{ width: "100%", height: "800px" }}>
+		<div style={{ width: "100%", height: "calc(100vh - 317.5px)" }}>
 			{renderConfirmDialog()}
 			<DataGrid
 				editMode="cell"
 				rows={rows}
 				columns={columns}
-				getRowHeight={() => "auto"}
-				getRowId={(row) => row.id + row["Домен"]}
-				getEstimatedRowHeight={() => 200}
+				getRowHeight={() => 200}
+				getRowId={(row) => row.id}
+				// getEstimatedRowHeight={() => 100}
 				initialState={{
 					pagination: {
 						paginationModel: { page: 0, pageSize: 25 },

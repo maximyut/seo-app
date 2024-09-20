@@ -18,7 +18,7 @@ function CustomTabPanel(props) {
 			{...other}
 			style={{}}
 		>
-			{value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+			{value === index && <Box  sx={{ p: 2 }}>{children}</Box>}
 		</div>
 	);
 }
@@ -46,14 +46,14 @@ export default function BasicTabs({ pages }) {
 		<Box sx={{ width: "100%", height: "100%" }}>
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 				<Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-					{pages.map((catalog, i) => (
-						<Tab label={`Страница ${i + 1}`} {...a11yProps(i)} key={`page_${i + 1}`} />
+					{Object.keys(pages).map((catalogName, i) => (
+						<Tab label={catalogName} {...a11yProps(i)} key={catalogName} />
 					))}
 				</Tabs>
 			</Box>
-			{pages.map((catalog, i) => (
-				<CustomTabPanel value={value} index={i} key={`page_${i + 1}`}>
-					<BasicTable catalog={catalog} pageNumber={i} />
+			{Object.keys(pages).map((catalogName, i) => (
+				<CustomTabPanel value={value} index={i} key={catalogName}>
+					<BasicTable catalog={pages[catalogName]} pageName={catalogName} />
 				</CustomTabPanel>
 			))}
 		</Box>

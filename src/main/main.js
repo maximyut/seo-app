@@ -73,7 +73,7 @@ const createWindow = async () => {
 		width: 1024,
 		height: 728,
 		minWidth: 700,
-		minHeight: 500,
+		minHeight: 700,
 		icon: getAssetPath("icon.png"),
 		webPreferences: {
 			preload: app.isPackaged
@@ -155,6 +155,12 @@ ipcMain.on("electron-store-delete", async (event, key) => {
 ipcMain.on("electron-store-clear", async () => {
 	store.clear();
 });
+
+ipcMain.on("electron-store-resetCatalog", async () => {
+	store.reset("filePath", "pages", "config", "domains", "initialCatalog", "visitedLinks", "consoleInfo");
+});
+
+
 
 ipcMain.handle("create-excel", async () => {
 	const storedFilePath = store.get("filePath");

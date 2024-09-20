@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import * as React from "react";
+
 import Box from "@mui/material/Box";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
@@ -7,23 +7,34 @@ import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import Checkbox from "@mui/material/Checkbox";
+import { useCallback, useEffect, useState } from "react";
 
-export default function ConfigForm({ config, onConfigChange }) {
+export default function ConfigForm() {
+	const [config, setConfig] = useState(window.electron.store.get("config"));
+
+	const handleConfigChange = useCallback(
+		(newConfig) => {
+			setConfig({
+				...config,
+				...newConfig,
+			});
+		},
+		[config, setConfig],
+	);
 	const handleChange = (event) => {
-		onConfigChange({
+		handleConfigChange({
 			[event.target.name]: event.target.checked,
 		});
 	};
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (config.page3 && !config.page2) {
-			onConfigChange({
+			handleConfigChange({
 				page2: true,
 			});
 		}
-	}, [config, onConfigChange]);
-
-	// const { gilad, jason, antoine } = config;
+		window.electron.store.set("config", config);
+	}, [config, handleConfigChange]);
 
 	return (
 		<Box sx={{ display: "flex" }}>
@@ -37,6 +48,8 @@ export default function ConfigForm({ config, onConfigChange }) {
 								helperText = "*";
 							if (key === "breadcrumbs") {
 								label = "Хлебные крошки";
+							} else if (key === "page2" || key === "page3") {
+								label = `Страница ${key.slice(4)}`;
 							} else {
 								label = key;
 							}
@@ -58,14 +71,12 @@ export default function ConfigForm({ config, onConfigChange }) {
 								case "breadcrumbs":
 									helperText += `Сбор навигации ("хлебных крошек") со страницы при возможности. `;
 									break;
-									{
-										/* case "page2":
-									helperText += "Сбор заголовка страницы";
+								case "page2":
+									helperText += "Страница 2";
 									break;
 								case "page3":
-									helperText += "Сбор описания страницы";
-									break; */
-									}
+									helperText += "Страница 3";
+									break;
 								default:
 									label = key;
 									helperText = "";

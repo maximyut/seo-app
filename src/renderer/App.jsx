@@ -1,39 +1,25 @@
-import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
+import { MemoryRouter, Routes, Route, Link } from "react-router-dom";
 
 import "./App.css";
 
 import { Container } from "@mui/material";
-import Grid from "@mui/material/Unstable_Grid2";
 
-import AccordionUsage from "./Components/AccordionUsage";
-import ConsoleBlock from "./Components/Console";
-
-import Catalog from "./Components/Catalog";
-
-function StartPage() {
-	return (
-		<Grid container direction="column" spacing={2} sx={{ height: "100%" }} wrap="nowrap">
-			<div>New version</div>
-			<Grid xs={12} flexGrow={7} flexShrink={7}>
-				<Catalog />
-			</Grid>
-			<Grid xs={12} flexGrow={3} flexShrink={3}>
-				<AccordionUsage title="Консоль">
-					<ConsoleBlock />
-				</AccordionUsage>
-			</Grid>
-		</Grid>
-	);
-}
+import AuthPage from "./pages/AuthPage";
+import MenuAppBar from "./Components/UI/MenuAppBar";
+import MainPage from "./pages/MainPage";
+import ProfilePage from "./pages/ProfilePage";
 
 export default function App() {
 	return (
-		<Container maxWidth={false} sx={{ height: "100vh", padding: 2, maxHeight: "100vh" }}>
-			<Router>
+		<MemoryRouter>
+			<MenuAppBar />
+			<Container maxWidth={false} sx={{ padding: 2 }}>
 				<Routes>
-					<Route path="/" element={<StartPage />} />
+					<Route path="/" element={<AuthPage />} />
+					<Route path="/main" element={<MainPage />} />
+					<Route path="/profile" element={<ProfilePage />} />
 				</Routes>
-			</Router>
-		</Container>
+			</Container>
+		</MemoryRouter>
 	);
 }

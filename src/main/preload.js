@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld("electron", {
 
 	createPage2: () => ipcRenderer.invoke("createPage2"),
 	createPage3: () => ipcRenderer.invoke("createPage3"),
+	getSearchXML: (checkedDomains) => ipcRenderer.invoke("getSearchXML", checkedDomains),
 
 	createExcel: () => ipcRenderer.invoke("create-excel"),
 	store: {
@@ -27,6 +28,10 @@ contextBridge.exposeInMainWorld("electron", {
 		},
 		clear() {
 			ipcRenderer.send("electron-store-clear");
+		},
+
+		resetCatalog() {
+			ipcRenderer.send("electron-store-resetCatalog");
 		},
 		// Other method you want to add like has(), reset(), etc.
 	},

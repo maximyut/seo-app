@@ -61,16 +61,21 @@
 		"@emotion/react": "^11.11.4",
 		"@emotion/styled": "^11.11.0",
 		"@mui/icons-material": "^5.15.12",
+		"@mui/lab": "^5.0.0-alpha.169",
 		"@mui/material": "^5.15.12",
 		"@mui/x-data-grid": "^6.19.6",
 		"axios": "^1.6.7",
 		"cheerio": "^1.0.0-rc.12",
 		"chromium": "^3.0.3",
 		"cli-color": "^2.0.3",
+		"dotenv": "^16.4.5",
 		"electron-debug": "^3.2.0",
 		"electron-log": "^4.4.8",
-		"electron-store": "^8.2.0",
+		"electron-store": "^8.2.0.",
 		"electron-updater": "^6.1.4",
+		"firebase": "^10.10.0",
+		"firebaseui": "^6.1.0",
+		"is-valid-domain": "^0.1.6",
 		"lodash": "^4.17.21",
 		"prex": "^0.4.9",
 		"puppeteer": "^22.4.1",
@@ -79,9 +84,12 @@
 		"puppeteer-in-electron": "^3.0.5",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"react-router-dom": "^6.16.0",
+		"react-firebase-hooks": "^5.1.1",
+		"react-router-dom": "6",
 		"request": "^2.88.2",
-		"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
+		"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz",
+		"xml-js": "^1.6.11",
+		"xml2js": "^0.6.2"
 	},
 	"devDependencies": {
 		"@babel/runtime": "^7.24.0",
@@ -109,7 +117,7 @@
 		"css-loader": "^6.8.1",
 		"css-minimizer-webpack-plugin": "^5.0.1",
 		"detect-port": "^1.5.1",
-		"electron": "^29.1.4",
+		"electron": "^32.1.0",
 		"electron-builder": "^24.6.4",
 		"electron-devtools-installer": "^3.2.0",
 		"electronmon": "^2.0.2",
@@ -152,7 +160,6 @@
 		"webpack-dev-server": "^4.15.1",
 		"webpack-merge": "^5.9.0"
 	},
-
 	"devEngines": {
 		"node": ">=14.x",
 		"npm": ">=7.x"

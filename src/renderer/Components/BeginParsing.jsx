@@ -1,7 +1,6 @@
 import { Button, Stack } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import ProgressBar from "./ProgressBar";
-import ConfigForm from "./ConfigForm";
+import ProgressBar from "./UI/ProgressBar";
 
 // eslint-disable-next-line react/prop-types
 export default function BeginParsing({ continueParsing }) {
@@ -9,10 +8,8 @@ export default function BeginParsing({ continueParsing }) {
 	const [current, setCurrent] = useState(0);
 	const [total, setTotal] = useState();
 	const [parsing, setParsing] = useState(false);
-	const [config, setConfig] = useState(window.electron.store.get("config"));
 
 	const openFile = async () => {
-		window.electron.store.set("config", config);
 		const dirPath = await window.electron.startParsing();
 		setParsing(true);
 		setFileDir(dirPath);
@@ -51,17 +48,9 @@ export default function BeginParsing({ continueParsing }) {
 		setParsing(false);
 	};
 
-	const handleConfigChange = (newConfig) => {
-		setConfig({
-			...config,
-			...newConfig,
-		});
-	};
-
 	return (
 		<Stack spacing={4}>
 			<Stack spacing={2}>
-				<ConfigForm config={config} onConfigChange={handleConfigChange} />
 				<Stack direction="row" spacing={2} alignItems="center">
 					{parsing ? (
 						<>

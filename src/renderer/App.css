@@ -23,3 +23,13 @@ body {
 .text.error {
 	color: red;
 }
+
+.css-az8st9-MuiDataGrid-root .MuiDataGrid-cellContent {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-wrap: pretty;
+}
+
+.css-az8st9-MuiDataGrid-root .MuiDataGrid-row:not(.MuiDataGrid-row--dynamicHeight)>.MuiDataGrid-cell {
+	overflow-y: auto !important;
+}

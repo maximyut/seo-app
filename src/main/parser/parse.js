@@ -3,7 +3,7 @@ const cheerio = require("cheerio");
 const PCR = require("puppeteer-chromium-resolver");
 const { ipcMain, BrowserWindow } = require("electron");
 
-const { getCatalogFromExcel, createPage2, createPage3 } = require("./excelFunc");
+const { getCatalogFromExcel, createPage2, createPage3, getPositions } = require("./excelFunc");
 const { default: store } = require("../store");
 
 const countRepeats = (phrase, catalog) => {
@@ -18,7 +18,7 @@ const countRepeats = (phrase, catalog) => {
 	return [repeatedLinks, i];
 };
 
-const getRepeats = async (item, catalog) => {
+const getRepeats = (item, catalog) => {
 	// const foundPhrases = await getData(foundPhrasesPath);
 	// let foundPhrases = store.get("foundPhrases");
 
@@ -47,9 +47,12 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 	const visitedLinks = await store.get("visitedLinks");
 
 	const link = item["URL [KS]"];
-
+	if (!link) {
+		throw new Error("Ссылка отсутствует");
+	}
 	if (link in visitedLinks) {
 		newItem = { ...item, ...visitedLinks[link] };
+		mainWindow.webContents.send("getInfo", `Ссылка уже обработана`);
 		console.info("Ссылка уже обработана");
 	} else {
 		let html;
@@ -93,6 +96,8 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 		}
 
 		newItem = { ...item, ...info };
+		newItem = { ...newItem, ...getDomainInfo(item["URL [KS]"]) };
+
 		visitedLinks[link] = info;
 
 		store.set("visitedLinks", visitedLinks);
@@ -103,26 +108,26 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 
 // eslint-disable-next-line prettier/prettier
 const parseItem = async (item, initialCatalog, page, mainWindow, config) => {
+	await new Promise((resolve) => setTimeout(resolve, 250));
+
 	let newItem = {};
 
+	newItem = getRepeats(item, initialCatalog);
 	try {
-		newItem = await getRepeats(item, initialCatalog);
 		newItem = await getPageInfo(newItem, page, mainWindow, config);
-		newItem = { ...newItem, ...getDomainInfo(item["URL [KS]"]) };
 	} catch (error) {
-		mainWindow.webContents.send("getInfo", `Ошибка записи: ${error}`);
+		mainWindow.webContents.send("getInfo", `Ошибка получения информации со страницы: ${error}`);
+		console.error(`Ошибка получения информации со страницы: ${error}`);
 	}
-
 	return newItem;
 };
 
 const parse = async (filePath, mainWindow, config) => {
-	mainWindow.webContents.send("getInfo", `parse`);
 	const newCatalog = [];
 	let initialCatalog,
 		i = 1;
 
-	if (!store.has("initialCatalog")) {
+	if (!store.has("initialCatalog") || !store.get("initialCatalog") || store.get("initialCatalog").length < 1) {
 		try {
 			initialCatalog = await getCatalogFromExcel(filePath);
 
@@ -193,10 +198,14 @@ const parse = async (filePath, mainWindow, config) => {
 			try {
 				newCatalog.push({ id: i, ...(await parseItem(item, initialCatalog, page, mainWindow, config)) });
 			} catch (error) {
+				console.error(`Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
 				mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
 				return newCatalog;
 			}
-			if (i % Math.floor(initialCatalog.length / 1000) === 0) {
+
+			const length = (initialCatalog.length.toString().length - 1) * 10;
+
+			if (i % Math.floor(initialCatalog.length / length) === 0) {
 				mainWindow.webContents.send("getProgress", { current: i, total: initialCatalog.length });
 			}
 			if (stopParsing) {
@@ -222,24 +231,24 @@ const startParsing = async (filePath) => {
 	mainWindow.webContents.send("getInfo", `Старт парсинга`);
 	const config = store.get("config");
 
-	const pages = [];
-	let catalog2, catalog3;
+	const pages = {};
+	let catalog2;
 	try {
 		const mainCatalog = await parse(filePath, mainWindow, config);
-		pages.push(mainCatalog);
+		pages["Основной каталог"] = mainCatalog;
 
 		if (config.page2) {
 			catalog2 = createPage2(mainCatalog);
-			pages.push(catalog2);
+			pages["Страница 2"] = catalog2;
 		}
 		if (config.page3) {
-			catalog3 = createPage3(catalog2);
-			pages.push(catalog3);
+			pages["Страница 3"] = createPage3(catalog2);
 		}
 		mainWindow.webContents.send("getCatalog", pages);
 		store.set("pages", pages);
 	} catch (error) {
-		mainWindow.webContents.send("getInfo", `ошибка парсинга: ${error}`);
+		console.error(`Ошибка парсинга: ${error}`);
+		mainWindow.webContents.send("getInfo", `Ошибка парсинга: ${error}`);
 	}
 
 	mainWindow.webContents.send("getInfo", `Конец парсинга`);
@@ -248,28 +257,41 @@ const startParsing = async (filePath) => {
 };
 
 ipcMain.handle("createPage2", async () => {
-	const mainCatalog = await store.get("pages.0");
-	const page2 = createPage2(mainCatalog);
-	const newPages = [mainCatalog, page2];
-	store.set("pages", newPages);
-	return newPages;
+	const mainCatalog = await store.get("pages.Основной каталог");
+	store.set("pages.Страница 2", createPage2(mainCatalog));
+	return store.get("pages");
 });
 
 ipcMain.handle("createPage3", async () => {
-	const pages = await store.get("pages");
-	let newPages = [];
-	if (pages.length > 1) {
-		const page3 = createPage3(pages[1]);
-		newPages = [pages[0], pages[1], page3];
-		store.set("pages", newPages);
+	if (store.has("pages.Страница 2")) {
+		store.set("pages.Страница 3", createPage3(store.get("pages.Страница 2")));
 	} else {
-		const mainCatalog = store.get("pages")[0];
+		const mainCatalog = store.get("pages.Основной каталог");
 		const page2 = createPage2(mainCatalog);
 		const page3 = createPage3(page2);
-		newPages = [mainCatalog, page2, page3];
-		store.set("pages", newPages);
+		const pages = {
+			"Основной каталог": mainCatalog,
+			"Страница 2": page2,
+			"Страница 3": page3,
+		};
+		store.set("pages", pages);
 	}
-	return newPages;
+	return store.get("pages");
+});
+
+ipcMain.handle("getSearchXML", async (event, checkedDomains) => {
+	const page2 = await store.get("pages.Страница 2");
+	const domains = Object.keys(checkedDomains)
+		.map((key) => {
+			if (checkedDomains[key]) {
+				return key;
+			}
+		})
+		.filter((el) => el);
+
+	const positions = await getPositions(page2, domains);
+	store.set("pages.Позиции", positions);
+	return store.get("pages");
 });
 
 module.exports = {
