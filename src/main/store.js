@@ -21,14 +21,6 @@ const schema = {
 				type: "boolean",
 				default: false,
 			},
-			page2: {
-				type: "boolean",
-				default: false,
-			},
-			page3: {
-				type: "boolean",
-				default: false,
-			},
 			domains: {
 				type: "array",
 				items: {
@@ -37,12 +29,9 @@ const schema = {
 				},
 			},
 		},
-		required: ["h1", "title", "description", "page2"],
+		required: ["h1", "title", "description"],
 	},
-	stopParsing: {
-		type: "boolean",
-		default: false,
-	},
+
 	pausedElement: {
 		type: "number",
 		default: 0,
@@ -67,20 +56,31 @@ const defaults = {
 		title: false,
 		description: false,
 		breadcrumbs: false,
-		page2: false,
-		page3: false,
 	},
 	filePath: "",
-	stopParsing: false,
 	loadingPositions: false,
 	pausedElement: 0,
 	pages: {},
 	initialCatalog: [],
 	domains: [],
 	consoleInfo: [],
+	visitedLinks: {},
 };
 
 const store = new ElectronStore({ defaults, schema });
-
 store.set("loadingPositions", false);
+store.set("parsing", false);
+
+const sendInfo = async (text) => {
+	const info = {
+		date: Date.now(),
+		text,
+	};
+
+	const consoleInfo = await store.get("consoleInfo");
+	store.set("consoleInfo", [info, ...consoleInfo]);
+};
+
+export { sendInfo };
+
 export default store;

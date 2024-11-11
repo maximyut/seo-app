@@ -1,4 +1,3 @@
-// const { contextBridge, ipcRenderer } = require('electron');
 import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("electron", {
@@ -6,6 +5,7 @@ contextBridge.exposeInMainWorld("electron", {
 	getCatalog: (callback) => ipcRenderer.once("getCatalog", callback),
 	getProgress: (callback) => ipcRenderer.once("getProgress", callback),
 
+	openOldFile: () => ipcRenderer.invoke("openOldFile"),
 	startParsing: () => ipcRenderer.invoke("startParsing"),
 	stopParsing: () => ipcRenderer.send("stopParsing"),
 	pauseParsing: () => ipcRenderer.send("pauseParsing"),
@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("electron", {
 	getSearchXML: (checkedDomains) => ipcRenderer.invoke("getSearchXML", checkedDomains),
 
 	createExcel: () => ipcRenderer.invoke("create-excel"),
+	consoleDidChanged: (callback) => ipcRenderer.once("consoleDidChanged", callback),
 	store: {
 		get(key) {
 			return ipcRenderer.sendSync("electron-store-get", key);
@@ -29,7 +30,9 @@ contextBridge.exposeInMainWorld("electron", {
 		clear() {
 			ipcRenderer.send("electron-store-clear");
 		},
-
+		// consoleDidChanged(callback) {
+		// 	return ipcRenderer.once("consoleDidChanged", callback);
+		// },
 		resetCatalog() {
 			ipcRenderer.send("electron-store-resetCatalog");
 		},

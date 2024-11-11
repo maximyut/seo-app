@@ -46,7 +46,11 @@ function BasicTable({ catalog, pageName }) {
 	const noButtonRef = useRef(null);
 	const [promiseArguments, setPromiseArguments] = useState(null);
 
-	const keys = Object.keys(catalog[0]);
+	const newArr = catalog.map((el) => {
+		return Object.keys(el);
+	});
+
+	const keys = Array.from(new Set(newArr.flat()));
 
 	const computeMutation = useCallback(
 		(newRow, oldRow) => {
@@ -215,8 +219,8 @@ function BasicTable({ catalog, pageName }) {
 				}}
 			/>
 			{!!snackbar && (
-				<Snackbar open onClose={handleCloseSnackbar} autoHideDuration={6000}>
-					<Alert {...snackbar} onClose={handleCloseSnackbar} />
+				<Snackbar open onClose={handleCloseSnackbar} autoHideDuration={4000}>
+					<Alert {...snackbar} onClose={handleCloseSnackbar} variant="filled" />
 				</Snackbar>
 			)}
 		</div>

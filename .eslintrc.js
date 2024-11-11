@@ -18,6 +18,7 @@ module.exports = {
 		"one-var": "off",
 		"react/jsx-props-no-spreading": "off",
 		"react/function-component-definition": "off",
+		"react/prop-types": "off",
 	},
 	parserOptions: {
 		ecmaVersion: 2022,

@@ -1,18 +1,33 @@
 import { useState, memo } from "react";
-import { Button, Stack } from "@mui/material";
+import { Button, ButtonGroup, Stack } from "@mui/material";
 
 import BeginParsing from "./BeginParsing";
 import BasicTabs from "./UI/Tabs";
+import AlertMessage from "./UI/AlertMessage";
 
 const Catalog = memo(({ setPages, pages }) => {
 	const [continueParsing, setContinueParsing] = useState(false);
+	const [alertData, setAlertData] = useState({});
 
 	window.electron.getCatalog((event, data) => {
 		setPages(data);
 	});
 
-	const handleSaveCatalog = () => {
-		window.electron.createExcel();
+	const handleSaveCatalog = async () => {
+		const [save, cancel, error] = await window.electron.createExcel();
+		if (save) {
+			setAlertData((data) => {
+				return { ...data, open: true, message: "Каталог успешно сохранен", type: "success" };
+			});
+		} else if (cancel) {
+			setAlertData((data) => {
+				return { ...data, open: true, message: "Каталог не был сохранен", type: "info" };
+			});
+		} else if (error) {
+			setAlertData((data) => {
+				return { ...data, open: true, message: "Ошибка! Каталог не сохранен!", type: "error" };
+			});
+		}
 	};
 
 	const handleClearCatalog = () => {
@@ -26,27 +41,40 @@ const Catalog = memo(({ setPages, pages }) => {
 		setContinueParsing(true);
 	};
 
+	const handleClose = (event, reason) => {
+		if (reason === "clickaway") {
+			return;
+		}
+
+		setAlertData((data) => {
+			return { ...data, open: false };
+		});
+	};
+
 	if (pages && Object.keys(pages).length > 0) {
 		return (
-			<Stack direction="column" spacing={4} height="100%">
-				<Stack spacing={2}>
-					<Stack direction="row" spacing={2}>
-						<Button variant="contained" size="small" onClick={handleSaveCatalog}>
-							Сохранить каталог
-						</Button>
-						{window.electron.store.get("pausedElement") ? (
-							<Button variant="contained" size="small" onClick={handleContinueParsing}>
-								Возобновить парсинг
+			<>
+				<AlertMessage handleClose={handleClose} data={alertData} />
+				<Stack direction="column" spacing={4} height="100%">
+					<Stack spacing={2}>
+						<ButtonGroup>
+							<Button variant="contained" onClick={handleSaveCatalog}>
+								Сохранить каталог
 							</Button>
-						) : null}
+							{window.electron.store.get("pausedElement") ? (
+								<Button variant="contained" onClick={handleContinueParsing}>
+									Возобновить парсинг
+								</Button>
+							) : null}
 
-						<Button variant="contained" size="small" onClick={handleClearCatalog}>
-							Очистить каталог
-						</Button>
+							<Button variant="contained" onClick={handleClearCatalog}>
+								Очистить каталог
+							</Button>
+						</ButtonGroup>
+						<BasicTabs pages={pages} />
 					</Stack>
-					<BasicTabs pages={pages} />
 				</Stack>
-			</Stack>
+			</>
 		);
 	}
 

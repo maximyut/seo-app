@@ -10,14 +10,15 @@ import {
 	Stack,
 	TextField,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import isValidDomain from "is-valid-domain";
 import ProgressBar from "../UI/ProgressBar";
 
-export default function SearchSettings({ setPages }) {
-	const [domains, setDomains] = useState(window.electron.store.get("domains"));
+export default function SearchSettings({ pages, setPages }) {
+	const domains = window.electron.store.get("domains");
 	const [XMLKey, setXMLKey] = useState(window.electron.store.get("XML.API_KEY"));
 	const [checkedDomains, setCheckedDomains] = useState(domains.reduce((a, v) => ({ ...a, [v]: false }), {}));
+	const [checkedAll, setCheckedAll] = useState(false);
 	const [newDomain, setNewDomain] = useState("");
 	const [loadingPositions, setLoadingPositions] = useState(window.electron?.store?.get("loadingPositions"));
 	const [current, setCurrent] = useState(0);
@@ -28,6 +29,25 @@ export default function SearchSettings({ setPages }) {
 			...checkedDomains,
 			[event.target.name]: event.target.checked,
 		});
+	};
+
+	const handleCheckedAll = (event) => {
+		if (event.target.checked) {
+			setCheckedDomains((obj) =>
+				Object.keys(obj).reduce((acc, key) => {
+					acc[key] = true;
+					return acc;
+				}, {}),
+			);
+		} else {
+			setCheckedDomains((obj) =>
+				Object.keys(obj).reduce((acc, key) => {
+					acc[key] = false;
+					return acc;
+				}, {}),
+			);
+		}
+		setCheckedAll(event.target.checked);
 	};
 
 	const handleAddDomain = () => {
@@ -53,6 +73,7 @@ export default function SearchSettings({ setPages }) {
 				return checkedDomains[key];
 			})
 			.filter((v) => v).length < 1;
+
 	const inputError = !isValidDomain(newDomain) && newDomain.length > 0;
 
 	const percentage = useMemo(() => {
@@ -64,6 +85,14 @@ export default function SearchSettings({ setPages }) {
 		}
 		return 0.0;
 	}, [current, total]);
+
+	useEffect(() => {
+		setCheckedDomains(window.electron.store.get("domains").reduce((a, v) => ({ ...a, [v]: false }), {}));
+	}, [pages]);
+
+	useEffect(() => {
+		Object.values(checkedDomains).every((v) => v) ? setCheckedAll(true) : setCheckedAll(false);
+	}, [checkedDomains]);
 
 	if (!window.electron.store.get("pages.Страница 3")) {
 		return <Box>Чтобы получить поисковые запросы, создайте страницу 3</Box>;
@@ -93,6 +122,10 @@ export default function SearchSettings({ setPages }) {
 					<Button variant="contained" onClick={handleGetSearchXML} disabled={error}>
 						Страница с поисковыми запросами
 					</Button>
+					<FormControlLabel
+						control={<Checkbox checked={checkedAll} onChange={handleCheckedAll} name="checkedAll" />}
+						label={checkedAll ? "Отменить выбор всех доменов" : "Выбрать все домены"}
+					/>
 					<Stack spacing={2}>
 						<FormControl required error={error} component="fieldset">
 							<FormLabel component="legend">Существующие домены:</FormLabel>

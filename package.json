@@ -86,6 +86,8 @@
 		"react-dom": "^18.2.0",
 		"react-firebase-hooks": "^5.1.1",
 		"react-router-dom": "6",
+		"react-virtualized-auto-sizer": "^1.0.24",
+		"react-window": "^1.8.10",
 		"request": "^2.88.2",
 		"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz",
 		"xml-js": "^1.6.11",

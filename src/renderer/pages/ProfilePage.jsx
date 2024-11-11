@@ -4,11 +4,10 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { Button, Stack, TextField } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { db, auth } from "../firebase/firebase";
 import TelegramIcon from "@mui/icons-material/Telegram";
+import { db, auth } from "../firebase/firebase";
 
 export default function ProfilePage() {
-
 	const [user, loadingUser, errorUser] = useAuthState(auth);
 	const profileRef = doc(db, "users", user.uid);
 	const premiumRef = doc(db, "users", user.uid, "private", "premium");

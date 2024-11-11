@@ -38,7 +38,7 @@ export default function ConfigForm() {
 
 	return (
 		<Box sx={{ display: "flex" }}>
-			<FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
+			<FormControl component="fieldset" variant="standard">
 				<FormLabel component="legend">Выберите нужные вам параметры</FormLabel>
 				<FormGroup>
 					{Object.keys(config).map((key) => {
@@ -48,14 +48,8 @@ export default function ConfigForm() {
 								helperText = "*";
 							if (key === "breadcrumbs") {
 								label = "Хлебные крошки";
-							} else if (key === "page2" || key === "page3") {
-								label = `Страница ${key.slice(4)}`;
 							} else {
 								label = key;
-							}
-
-							if (key === "page2" && config.page3) {
-								disabled = true;
 							}
 
 							switch (key) {
@@ -70,12 +64,6 @@ export default function ConfigForm() {
 									break;
 								case "breadcrumbs":
 									helperText += `Сбор навигации ("хлебных крошек") со страницы при возможности. `;
-									break;
-								case "page2":
-									helperText += "Страница 2";
-									break;
-								case "page3":
-									helperText += "Страница 3";
 									break;
 								default:
 									label = key;
@@ -95,10 +83,13 @@ export default function ConfigForm() {
 										}
 										label={label}
 									/>
-									<FormHelperText variant="outlined">{helperText}</FormHelperText>
+									<FormHelperText sx={{ mr: 0 }} variant="outlined">
+										{helperText}
+									</FormHelperText>
 								</div>
 							);
 						}
+						return null;
 					})}
 				</FormGroup>
 			</FormControl>

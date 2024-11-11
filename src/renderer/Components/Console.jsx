@@ -1,66 +1,114 @@
-import { Box, Button, Divider, Drawer, List, ListItem, Stack, Typography } from "@mui/material";
-import { useState, useEffect } from "react";
+import { Box, Button, Divider, Drawer, IconButton, List, ListItem, Stack, Typography } from "@mui/material";
+import { useState, memo } from "react";
+import { FixedSizeList } from "react-window";
 import CloseIcon from "@mui/icons-material/Close";
-
+import AutoSizer from "react-virtualized-auto-sizer";
 import SpeedDial from "@mui/material/SpeedDial";
 
 import TerminalIcon from "@mui/icons-material/Terminal";
 import Tooltip from "@mui/material/Tooltip";
+import { Refresh } from "@mui/icons-material";
 
-export default function ConsoleBlock() {
-	const [drawerOpen, setDrawerOpen] = useState(false);
+const ConsoleListItem = memo(({ index, style, data }) => {
+	const { date, milliDate, text } = data[index];
+	const textClass = text.includes("Error") ? "text error" : "text";
+	console.log();
+	return (
+		<ListItem style={style} sx={{ borderTop: "1px solid #ccc" }}>
+			<div className="console-string">
+				<div className="date"> {new Date(date).toLocaleString()}: &nbsp;</div>
+				<div className={textClass}>{text}</div>
+			</div>
+		</ListItem>
+	);
+});
+
+const ConsoleList = () => {
 	const [data, setData] = useState(window.electron.store.get("consoleInfo") || []);
 
-	window.electron.getInfo((event, info) => {
-		const obj = {
-			date: new Date().toLocaleString(),
-			milliDate: Date.now(),
-			text: info,
-		};
-		setData([obj, ...data]);
-		window.electron.store.set("consoleInfo", data);
-	});
+	// const interval = setInterval(() => {
+	// 	const consoleInfo = window.electron.store.get("consoleInfo");
+	// 	console.log("interval");
+	// 	if (consoleInfo.length !== data.length) {
+	// 		setData(consoleInfo);
+	// 	} else {
+	// 		clearInterval(interval);
+	// 	}
+	// }, 3000);
+
+	const emptyText = (
+		<div className="console-string">
+			<Typography>Консоль пуста</Typography>
+		</div>
+	);
+
+	const list = (
+		<AutoSizer>
+			{({ height, width }) => (
+				<FixedSizeList
+					height={height}
+					itemCount={data.length}
+					itemSize={50}
+					width={width}
+					overscanCount={10}
+					itemData={data}
+				>
+					{ConsoleListItem}
+				</FixedSizeList>
+			)}
+		</AutoSizer>
+	);
+
+	const content = data.length === 0 ? emptyText : list;
+
+	return (
+		<Stack direction="row" height="100%" alignItems="flex-start" justifyContent="space-between">
+			{content}
+			<IconButton
+				size="large"
+				edge="start"
+				color="inherit"
+				aria-label="menu"
+				sx={{ mr: 2 }}
+				onClick={() => setData(window.electron.store.get("consoleInfo"))}
+			>
+				<Refresh />
+			</IconButton>
+		</Stack>
+	);
+};
+
+const ConsoleBlock = memo(() => {
+	const [drawerOpen, setDrawerOpen] = useState(false);
+
 	const toggleDrawer = (newOpen) => () => {
 		setDrawerOpen(newOpen);
 	};
 
-	if (data.length > 0) {
-		return (
-			<>
-				<Tooltip title="Открыть консоль">
-					<SpeedDial
-						ariaLabel="SpeedDial basic example"
-						sx={{ position: "fixed", bottom: 16, left: 16 }}
-						icon={<TerminalIcon />}
-						onClick={toggleDrawer(true)}
-					/>
-				</Tooltip>
+	return (
+		<>
+			<Tooltip title="Открыть консоль">
+				<SpeedDial
+					ariaLabel="SpeedDial basic example"
+					sx={{ position: "fixed", bottom: 16, left: 16 }}
+					icon={<TerminalIcon />}
+					onClick={toggleDrawer(true)}
+				/>
+			</Tooltip>
 
-				<Drawer anchor="bottom" open={drawerOpen} onClose={toggleDrawer(false)}>
-					<Box sx={{ height: "50vh", padding: 3 }}>
-						<Stack direction="row" justifyContent="space-between" alignItems="center">
-							<Typography sx={{ position: "sticky", top: 0 }} variant="h5">
-								Консоль
-							</Typography>
-							<CloseIcon fontSize="large" onClick={toggleDrawer(false)} sx={{ cursor: "pointer" }} />
-						</Stack>
+			<Drawer anchor="bottom" open={drawerOpen} onClose={toggleDrawer(false)}>
+				<Stack direction="column" sx={{ height: "50vh", padding: 3, overflow: "hidden" }}>
+					<Stack direction="row" justifyContent="space-between" alignItems="center">
+						<Typography sx={{ position: "sticky", top: 0 }} variant="h5">
+							Консоль
+						</Typography>
+						<CloseIcon fontSize="large" onClick={toggleDrawer(false)} sx={{ cursor: "pointer" }} />
+					</Stack>
+					<ConsoleList />
+				</Stack>
+			</Drawer>
+		</>
+	);
+});
 
-						<List>
-							{data.map(({ date, milliDate, text }) => {
-								const textClass = text.includes("Error") ? "text error" : "text";
-								return (
-									<ListItem key={`${milliDate}`} sx={{ borderTop: "1px solid #ccc" }}>
-										<div className="console-string">
-											<div className="date">{date}: &nbsp;</div>
-											<div className={textClass}>{text}</div>
-										</div>
-									</ListItem>
-								);
-							})}
-						</List>
-					</Box>
-				</Drawer>
-			</>
-		);
-	}
-}
+export default ConsoleBlock;

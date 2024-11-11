@@ -1,10 +1,11 @@
+/* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
 const cheerio = require("cheerio");
 const PCR = require("puppeteer-chromium-resolver");
 const { ipcMain, BrowserWindow } = require("electron");
 
 const { getCatalogFromExcel, createPage2, createPage3, getPositions } = require("./excelFunc");
-const { default: store } = require("../store");
+const { default: store, sendInfo } = require("../store");
 
 const countRepeats = (phrase, catalog) => {
 	let i = 0;
@@ -43,16 +44,19 @@ const getDomainInfo = (link) => {
 
 const getPageInfo = async (item, page, mainWindow, config) => {
 	let newItem = {};
-	const info = {};
-	const visitedLinks = await store.get("visitedLinks");
+	let info = {};
+	let visitedLinks = await store.get("visitedLinks");
 
 	const link = item["URL [KS]"];
+	info = { ...getDomainInfo(link) };
+
 	if (!link) {
 		throw new Error("Ссылка отсутствует");
 	}
 	if (link in visitedLinks) {
 		newItem = { ...item, ...visitedLinks[link] };
-		mainWindow.webContents.send("getInfo", `Ссылка уже обработана`);
+		// mainWindow.webContents.send("getInfo", `Ссылка уже обработана`);
+		sendInfo(`Ссылка уже обработана`);
 		console.info("Ссылка уже обработана");
 	} else {
 		let html;
@@ -63,7 +67,9 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 
 			// html = (await axios.get(link)).data;
 		} catch (error) {
-			mainWindow.webContents.send("getInfo", `Страница ${link} недоступна, ${error}`);
+			// mainWindow.webContents.send("getInfo", `Страница ${link} недоступна, ${error}`);
+			sendInfo(`Страница ${link} недоступна, ${error}`);
+			console.error(`Страница ${link} недоступна, ${error}`);
 			return item;
 		}
 
@@ -96,12 +102,12 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 		}
 
 		newItem = { ...item, ...info };
-		newItem = { ...newItem, ...getDomainInfo(item["URL [KS]"]) };
-
 		visitedLinks[link] = info;
+		console.log(info);
 
-		store.set("visitedLinks", visitedLinks);
+		await store.set("visitedLinks", visitedLinks);
 	}
+	newItem = { ...newItem };
 
 	return newItem;
 };
@@ -116,7 +122,8 @@ const parseItem = async (item, initialCatalog, page, mainWindow, config) => {
 	try {
 		newItem = await getPageInfo(newItem, page, mainWindow, config);
 	} catch (error) {
-		mainWindow.webContents.send("getInfo", `Ошибка получения информации со страницы: ${error}`);
+		// mainWindow.webContents.send("getInfo", `Ошибка получения информации со страницы: ${error}`);
+		sendInfo(`Ошибка получения информации со страницы: ${error}`);
 		console.error(`Ошибка получения информации со страницы: ${error}`);
 	}
 	return newItem;
@@ -127,19 +134,15 @@ const parse = async (filePath, mainWindow, config) => {
 	let initialCatalog,
 		i = 1;
 
-	if (!store.has("initialCatalog") || !store.get("initialCatalog") || store.get("initialCatalog").length < 1) {
-		try {
-			initialCatalog = await getCatalogFromExcel(filePath);
+	try {
+		initialCatalog = await getCatalogFromExcel(filePath);
 
-			store.set("initialCatalog", initialCatalog);
-		} catch (error) {
-			mainWindow.webContents.send("getInfo", ` Нет каталога, ${error.message}, ${filePath}`);
-			console.error(` Нет каталога, ${error}, ${filePath}`);
-			throw error;
-		}
-	} else {
-		initialCatalog = store.get("initialCatalog");
-		console.info(` Каталог существует, ${initialCatalog}, ${filePath}`);
+		store.set("initialCatalog", initialCatalog);
+	} catch (error) {
+		// mainWindow.webContents.send("getInfo", ` Нет каталога, ${error.message}, ${filePath}`);
+		sendInfo(` Нет каталога, ${error.message}, ${filePath}`);
+		console.error(` Нет каталога, ${error}, ${filePath}`);
+		throw error;
 	}
 
 	if (!store.has("visitedLinks")) {
@@ -160,7 +163,8 @@ const parse = async (filePath, mainWindow, config) => {
 		console.info("Браузер запущен");
 	} catch (error) {
 		console.error(`Ошибка запуска браузера: ${error}`);
-		mainWindow.webContents.send("getInfo", `Ошибка запуска браузера: ${error.message}`);
+		// mainWindow.webContents.send("getInfo", `Ошибка запуска браузера: ${error.message}`);
+		sendInfo(`Ошибка запуска браузера: ${error.message}`);
 	}
 
 	try {
@@ -170,45 +174,38 @@ const parse = async (filePath, mainWindow, config) => {
 		console.info("Страница открыта");
 	} catch (error) {
 		console.error(`Ошибка открытия страницы: ${error}`);
-		mainWindow.webContents.send("getInfo", `Ошибка открытия страницы: ${error.message}`);
+		// mainWindow.webContents.send("getInfo", `Ошибка открытия страницы: ${error.message}`);
+		sendInfo(`Ошибка открытия страницы: ${error.message}`);
 	}
 
-	let stopParsing,
+	let parsing = store.get("parsing"),
 		pausedElement = 0;
 
 	ipcMain.on("stopParsing", async () => {
-		stopParsing = true;
+		parsing = false;
 		pausedElement = store.delete("pausedElement");
 	});
-
-	ipcMain.on("pauseParsing", async () => {
-		stopParsing = true;
-		store.set("pausedElement", i);
-	});
-
-	if (store.has("pausedElement")) {
-		pausedElement = store.get("pausedElement");
-	}
 
 	for (const item of initialCatalog) {
 		// mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length}`)
 		if (i >= pausedElement) {
 			console.info(`Элемент ${i} из ${initialCatalog.length}`);
-			mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length}`);
+			// mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length}`);
+			sendInfo(`Элемент ${i} из ${initialCatalog.length}`);
 			try {
 				newCatalog.push({ id: i, ...(await parseItem(item, initialCatalog, page, mainWindow, config)) });
 			} catch (error) {
 				console.error(`Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
-				mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
-				return newCatalog;
+				// mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
+				sendInfo(`Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
+				continue;
 			}
 
-			const length = (initialCatalog.length.toString().length - 1) * 10;
-
-			if (i % Math.floor(initialCatalog.length / length) === 0) {
+			if (i % Math.floor(initialCatalog.length / 100) === 0) {
 				mainWindow.webContents.send("getProgress", { current: i, total: initialCatalog.length });
 			}
-			if (stopParsing) {
+
+			if (!parsing) {
 				break;
 			}
 		}
@@ -226,33 +223,33 @@ const parse = async (filePath, mainWindow, config) => {
 
 const startParsing = async (filePath) => {
 	console.info(`Старт парсинга`);
+	store.set("parsing", true);
+
 	const mainWindow = BrowserWindow.fromId(1);
 
-	mainWindow.webContents.send("getInfo", `Старт парсинга`);
+	// mainWindow.webContents.send("getInfo", `Старт парсинга`);
+	sendInfo(`Старт парсинга`);
 	const config = store.get("config");
 
 	const pages = {};
-	let catalog2;
+
 	try {
 		const mainCatalog = await parse(filePath, mainWindow, config);
 		pages["Основной каталог"] = mainCatalog;
 
-		if (config.page2) {
-			catalog2 = createPage2(mainCatalog);
-			pages["Страница 2"] = catalog2;
-		}
-		if (config.page3) {
-			pages["Страница 3"] = createPage3(catalog2);
-		}
 		mainWindow.webContents.send("getCatalog", pages);
 		store.set("pages", pages);
 	} catch (error) {
 		console.error(`Ошибка парсинга: ${error}`);
-		mainWindow.webContents.send("getInfo", `Ошибка парсинга: ${error}`);
+		// mainWindow.webContents.send("getInfo", `Ошибка парсинга: ${error}`);
+		sendInfo(`Ошибка парсинга: ${error}`);
 	}
 
-	mainWindow.webContents.send("getInfo", `Конец парсинга`);
+	// mainWindow.webContents.send("getInfo", `Конец парсинга`);
+	sendInfo(`Конец парсинга`);
 	console.info(`Конец парсинга`);
+	store.set("parsing", false);
+
 	return pages;
 };
 
@@ -296,4 +293,5 @@ ipcMain.handle("getSearchXML", async (event, checkedDomains) => {
 
 module.exports = {
 	startParsing,
+	sendInfo,
 };

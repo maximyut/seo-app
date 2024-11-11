@@ -15,7 +15,7 @@ import log from "electron-log";
 import MenuBuilder from "./menu";
 import { resolveHtmlPath } from "./util";
 import { start } from "./parser/start";
-import { createExcelAndCSV } from "./parser/excelFunc";
+import { createExcelAndCSV, getOldCatalogFromExcel } from "./parser/excelFunc";
 import store from "./store";
 
 class AppUpdater {
@@ -95,6 +95,24 @@ const createWindow = async () => {
 		}
 	});
 
+	mainWindow.on("close", async (e) => {
+		if (store.get("parsing")) {
+			e.preventDefault();
+
+			const { response } = await dialog.showMessageBox(mainWindow, {
+				type: "question",
+				title: "  Confirm  ",
+				message: "Вы действительно хотите закрыть приложение? Парсинг будет прерван.",
+				buttons: ["Да", "Нет"],
+			});
+
+			if (response === 0) {
+				mainWindow.webContents.send("stopParsing");
+				mainWindow.destroy();
+			}
+		}
+	});
+
 	mainWindow.on("closed", () => {
 		mainWindow = null;
 	});
@@ -117,7 +135,6 @@ const startParsing = (dirPaths) => {
 	start(dirPaths);
 };
 
-// eslint-disable-next-line consistent-return
 async function handleDirOpen() {
 	const { canceled, filePaths } = await dialog.showOpenDialog({
 		properties: ["openFile"],
@@ -134,7 +151,46 @@ async function handleDirOpen() {
 		startParsing(filePaths[0]);
 		return filePaths[0];
 	}
+
+	return null;
 }
+
+async function handleOpenOldFile() {
+	const { canceled, filePaths } = await dialog.showOpenDialog({
+		properties: ["openFile"],
+		filters: [
+			{
+				name: "Таблица",
+				extensions: ["xlsx", "xls", "xlsb" /* ... other formats ... */],
+			},
+		],
+	});
+
+	if (!canceled) {
+		try {
+			const pages = await getOldCatalogFromExcel(filePaths[0]);
+			store.set("pages", pages);
+			store.set("filePath", filePaths[0]);
+			mainWindow.webContents.send("getCatalog", pages);
+
+			return {
+				filePath: filePaths[0],
+				error: null,
+			};
+		} catch (error) {
+			console.error(`Ошибка открытия файла: ${error}`);
+			return {
+				filePath: null,
+				error,
+			};
+		}
+	}
+
+	return null;
+}
+
+ipcMain.handle("startParsing", handleDirOpen);
+ipcMain.handle("openOldFile", handleOpenOldFile);
 
 /**
  * Add event listeners...
@@ -160,12 +216,13 @@ ipcMain.on("electron-store-resetCatalog", async () => {
 	store.reset("filePath", "pages", "config", "domains", "initialCatalog", "visitedLinks", "consoleInfo");
 });
 
-
-
 ipcMain.handle("create-excel", async () => {
 	const storedFilePath = store.get("filePath");
 	const dirname = path.dirname(storedFilePath);
 	const basename = path.basename(storedFilePath);
+	let save = false;
+	let cancel = false;
+	let error = false;
 
 	const options = {
 		title: "Сохранить",
@@ -173,21 +230,23 @@ ipcMain.handle("create-excel", async () => {
 		defaultPath: `${dirname}/Обновленная ${basename}`,
 		filters: [{ name: "All files", extensions: [".xlsx"] }],
 	};
-	dialog
-		.showSaveDialog(options)
-		.then((filename) => {
-			const { canceled, filePath } = filename;
-			// eslint-disable-next-line promise/always-return
-			if (!canceled) {
-				createExcelAndCSV(store.get("pages"), filePath);
-			}
-		})
-		.catch((err) => {
-			console.error(err);
-		});
-});
+	const { canceled, filePath } = await dialog.showSaveDialog(options);
 
-ipcMain.handle("startParsing", handleDirOpen);
+	if (!canceled) {
+		await createExcelAndCSV(store.get("pages"), filePath)
+			.then(() => {
+				save = true;
+			})
+			.catch((e) => {
+				error = true;
+				console.log("error", e);
+			});
+	} else {
+		cancel = true;
+	}
+
+	return [save, cancel, error];
+});
 
 ipcMain.on("continueParsing", async () => {
 	startParsing(store.get("filePath"));
@@ -197,8 +256,8 @@ app.on("window-all-closed", () => {
 	// Respect the OSX convention of having the application in memory even
 	// after all windows have been closed
 	// if (process.platform !== "darwin") {
+
 	app.quit();
-	// }
 });
 
 app.whenReady()
