@@ -1,25 +1,28 @@
-import { MemoryRouter, Routes, Route, Link } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 
 import "./App.css";
 
-import { Container } from "@mui/material";
-
+import { useState } from "react";
 import AuthPage from "./pages/AuthPage";
-import MenuAppBar from "./Components/UI/MenuAppBar";
+
 import MainPage from "./pages/MainPage";
 import ProfilePage from "./pages/ProfilePage";
+import PersistentDrawerRight from "./Components/UI/PersistentDrawerRight";
+import HelpPage from "./pages/HelpPage";
 
 export default function App() {
+	const [pages, setPages] = useState(window.electron?.store?.get("pages"));
+
 	return (
 		<MemoryRouter>
-			<MenuAppBar />
-			<Container maxWidth={false} sx={{ padding: 2 }}>
+			<PersistentDrawerRight pages={pages} setPages={setPages}>
 				<Routes>
 					<Route path="/" element={<AuthPage />} />
-					<Route path="/main" element={<MainPage />} />
+					<Route path="/main" element={<MainPage pages={pages} setPages={setPages} />} />
 					<Route path="/profile" element={<ProfilePage />} />
+					<Route path="/help" element={<HelpPage />} />
 				</Routes>
-			</Container>
+			</PersistentDrawerRight>
 		</MemoryRouter>
 	);
-}
+} 

@@ -195,7 +195,7 @@ function BasicTable({ catalog, pageName }) {
 		},
 	];
 	return (
-		<div style={{ width: "100%", height: "calc(100vh - 317.5px)" }}>
+		<div style={{ width: "100%", height: "calc(100vh - 250px)" }}>
 			{renderConfirmDialog()}
 			<DataGrid
 				editMode="cell"

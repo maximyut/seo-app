@@ -35,7 +35,7 @@ export default function ConfigForm() {
 		}
 		window.electron.store.set("config", config);
 	}, [config, handleConfigChange]);
-
+	
 	return (
 		<Box sx={{ display: "flex" }}>
 			<FormControl component="fieldset" variant="standard">

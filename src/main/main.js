@@ -17,6 +17,8 @@ import { resolveHtmlPath } from "./util";
 import { start } from "./parser/start";
 import { createExcelAndCSV, getOldCatalogFromExcel } from "./parser/excelFunc";
 import store from "./store";
+import sendMail from "./mailer";
+import { error } from "console";
 
 class AppUpdater {
 	constructor() {
@@ -171,6 +173,8 @@ async function handleOpenOldFile() {
 			const pages = await getOldCatalogFromExcel(filePaths[0]);
 			store.set("pages", pages);
 			store.set("filePath", filePaths[0]);
+			const domains = pages["Страница 3"].map((item) => item["Домен"]);
+			store.set("domains", { all: domains, checked: [] });
 			mainWindow.webContents.send("getCatalog", pages);
 
 			return {
@@ -212,8 +216,12 @@ ipcMain.on("electron-store-clear", async () => {
 	store.clear();
 });
 
+ipcMain.on("electron-store-getAll", async (event) => {
+	event.returnValue = store.store;
+});
+
 ipcMain.on("electron-store-resetCatalog", async () => {
-	store.reset("filePath", "pages", "config", "domains", "initialCatalog", "visitedLinks", "consoleInfo");
+	store.reset("filePath", "pages", "domains", "initialCatalog", "visitedLinks", "consoleInfo");
 });
 
 ipcMain.handle("create-excel", async () => {
@@ -258,6 +266,15 @@ app.on("window-all-closed", () => {
 	// if (process.platform !== "darwin") {
 
 	app.quit();
+});
+
+ipcMain.on("sendMail", async (event, args) => {
+	try {
+		const response = await sendMail(args);
+		event.returnValue = { response, error: null };
+	} catch (error) {
+		event.returnValue = { error, response: null };
+	}
 });
 
 app.whenReady()

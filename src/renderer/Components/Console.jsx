@@ -10,9 +10,9 @@ import Tooltip from "@mui/material/Tooltip";
 import { Refresh } from "@mui/icons-material";
 
 const ConsoleListItem = memo(({ index, style, data }) => {
-	const { date, milliDate, text } = data[index];
+	const { date, text } = data[index];
 	const textClass = text.includes("Error") ? "text error" : "text";
-	console.log();
+
 	return (
 		<ListItem style={style} sx={{ borderTop: "1px solid #ccc" }}>
 			<div className="console-string">
@@ -25,16 +25,6 @@ const ConsoleListItem = memo(({ index, style, data }) => {
 
 const ConsoleList = () => {
 	const [data, setData] = useState(window.electron.store.get("consoleInfo") || []);
-
-	// const interval = setInterval(() => {
-	// 	const consoleInfo = window.electron.store.get("consoleInfo");
-	// 	console.log("interval");
-	// 	if (consoleInfo.length !== data.length) {
-	// 		setData(consoleInfo);
-	// 	} else {
-	// 		clearInterval(interval);
-	// 	}
-	// }, 3000);
 
 	const emptyText = (
 		<div className="console-string">
@@ -60,7 +50,6 @@ const ConsoleList = () => {
 	);
 
 	const content = data.length === 0 ? emptyText : list;
-
 	return (
 		<Stack direction="row" height="100%" alignItems="flex-start" justifyContent="space-between">
 			{content}
@@ -96,8 +85,8 @@ const ConsoleBlock = memo(() => {
 				/>
 			</Tooltip>
 
-			<Drawer anchor="bottom" open={drawerOpen} onClose={toggleDrawer(false)}>
-				<Stack direction="column" sx={{ height: "50vh", padding: 3, overflow: "hidden" }}>
+			<Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+				<Stack direction="column" sx={{ width: "35vw", height: "100%", padding: 3, overflow: "hidden" }}>
 					<Stack direction="row" justifyContent="space-between" alignItems="center">
 						<Typography sx={{ position: "sticky", top: 0 }} variant="h5">
 							Консоль

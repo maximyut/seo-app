@@ -62,7 +62,7 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 		let html;
 
 		try {
-			await page.goto(link, { waitUntil: "load", timeout: 60000 }); // Navigate to the provided URL
+			await page.goto(link, { waitUntil: "load", timeout: 30000 }); // Navigate to the provided URL
 			html = await page.content(); // Get the page content
 
 			// html = (await axios.get(link)).data;
@@ -114,7 +114,7 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 
 // eslint-disable-next-line prettier/prettier
 const parseItem = async (item, initialCatalog, page, mainWindow, config) => {
-	await new Promise((resolve) => setTimeout(resolve, 250));
+	await new Promise((resolve) => setTimeout(resolve, 1));
 
 	let newItem = {};
 
@@ -276,17 +276,18 @@ ipcMain.handle("createPage3", async () => {
 	return store.get("pages");
 });
 
-ipcMain.handle("getSearchXML", async (event, checkedDomains) => {
+ipcMain.handle("getSearchXML", async (event) => {
 	const page2 = await store.get("pages.Страница 2");
-	const domains = Object.keys(checkedDomains)
+	const currentKeys = [...page2.map((item) => item["Фраза"]), ...store.get("keys.checked")];
+	const extraKeys = store.get("config.extraKeys.checked");
+	const positionsKeys = currentKeys
 		.map((key) => {
-			if (checkedDomains[key]) {
-				return key;
-			}
+			const arr = [];
+			extraKeys.forEach((el) => arr.push(`${key} ${el}`));
+			return arr;
 		})
-		.filter((el) => el);
-
-	const positions = await getPositions(page2, domains);
+		.flat();
+	const positions = await getPositions(positionsKeys, store.get("domains.checked"));
 	store.set("pages.Позиции", positions);
 	return store.get("pages");
 });

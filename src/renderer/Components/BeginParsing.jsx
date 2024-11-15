@@ -57,8 +57,10 @@ export default function BeginParsing({ continueParsing }) {
 
 	const handleOpenOldFile = async () => {
 		const response = await window.electron.openOldFile();
-		console.log(response)
-		if (!response?.filePath && response.error) {
+		if (!response) {
+			return;
+		}
+		if (!response?.filePath && response?.error) {
 			setAlertData((data) => {
 				return { ...data, open: true, message: response.error.message, type: "error" };
 			});

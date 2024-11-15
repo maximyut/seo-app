@@ -10,16 +10,21 @@ contextBridge.exposeInMainWorld("electron", {
 	stopParsing: () => ipcRenderer.send("stopParsing"),
 	pauseParsing: () => ipcRenderer.send("pauseParsing"),
 	continueParsing: () => ipcRenderer.send("continueParsing"),
+	sendMail: (mail) => ipcRenderer.sendSync("sendMail", mail),
 
 	createPage2: () => ipcRenderer.invoke("createPage2"),
 	createPage3: () => ipcRenderer.invoke("createPage3"),
-	getSearchXML: (checkedDomains) => ipcRenderer.invoke("getSearchXML", checkedDomains),
+	getSearchXML: () => ipcRenderer.invoke("getSearchXML"),
+	stopSearchXML: () => ipcRenderer.send("stopSearchXML"),
 
 	createExcel: () => ipcRenderer.invoke("create-excel"),
 	consoleDidChanged: (callback) => ipcRenderer.once("consoleDidChanged", callback),
 	store: {
 		get(key) {
 			return ipcRenderer.sendSync("electron-store-get", key);
+		},
+		getAll() {
+			return ipcRenderer.sendSync("electron-store-get");
 		},
 		set(property, val) {
 			ipcRenderer.send("electron-store-set", property, val);

@@ -6,7 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
+import HelpIcon from "@mui/icons-material/Help";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import Settings from "@mui/icons-material/Settings";
 import Logout from "@mui/icons-material/Logout";
@@ -61,12 +61,12 @@ export default function AccountMenu({ user }) {
 					</ListItemIcon>
 					Приложение
 				</MenuItem>
-				{/* <MenuItem onClick={handleClose}>
+				<MenuItem onClick={() => navigate("/help")}>
 					<ListItemIcon>
-						<Settings fontSize="small" />
+						<HelpIcon fontSize="small" />
 					</ListItemIcon>
-					Настройки
-				</MenuItem> */}
+					Помощь
+				</MenuItem>
 				<MenuItem onClick={() => auth.signOut()}>
 					<ListItemIcon>
 						<Logout fontSize="small" />

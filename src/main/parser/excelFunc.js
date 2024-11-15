@@ -7,14 +7,14 @@ import * as convert from "xml-js";
 import * as fs from "fs";
 import * as _ from "lodash";
 import axios from "axios";
-import { BrowserWindow } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 import store, { sendInfo } from "../store";
 
 const getGoogleXML = async (phrase) => {
 	const userID = store.get("XML.userID");
 	const API_KEY = store.get("XML.API_KEY");
 	const query = phrase;
-	const region = 1011969;
+	const region = store.get("config.location") || 213;
 	const groupBy = 100;
 	const searchLink = `https://xmlstock.com/google/json/?user=${userID}&key=${API_KEY}&query=${query}&groupby=${groupBy}&lr=${region}`;
 
@@ -38,24 +38,28 @@ const getGooglePositions = async (phrase, domains) => {
 		acc[`${domain} [Google]`] = "";
 		return acc;
 	}, {});
+	const positions = [];
 
 	for (const id in response) {
 		for (const domain of domains) {
 			const url = response[id].url;
 			if (url.includes(domain)) {
-				newObj[`${domain} [Google]`] = id;
+				positions.push({
+					[`${domain} [Google]`]: id,
+					[`${domain} Релевантный URL [Google]`]: url,
+				});
 			}
 		}
 	}
 
-	return { response, positions: newObj };
+	return { response, positions };
 };
 
 const getYandexXML = async (phrase) => {
 	const userID = store.get("XML.userID");
 	const API_KEY = store.get("XML.API_KEY");
 	const query = phrase;
-	const region = 213;
+	const region = store.get("config.location") || 213;
 	const groupBy = "attr%3Dd.mode%3Ddeep.groups-on-page%3D100.docs-in-group%3D1";
 	const searchLink = `https://xmlstock.com/yandex/xml/?user=${userID}&key=${API_KEY}&query=${query}&groupby=${groupBy}&lr=${region}`;
 	try {
@@ -71,54 +75,86 @@ const getYandexXML = async (phrase) => {
 
 const getYandexPositions = async (phrase, domains) => {
 	const response = await getYandexXML(phrase);
-
+	store.set("yandexResponse", response);
 	const newObj = domains.reduce((acc, domain) => {
 		acc[`${domain} [Yandex]`] = "";
 		return acc;
 	}, {});
 
 	let i = 1;
+	const positions = [];
 	for (const responseEl of response) {
 		for (const domain of domains) {
-			if (responseEl.categ._attributes.name === domain) {
-				newObj[`${domain} [Yandex]`] = i;
+			const url = responseEl.doc.url._text;
+
+			if (url.includes(domain)) {
+				positions.push({
+					[`${domain} [Yandex]`]: i,
+					[`${domain} Релевантный URL [Yandex]`]: url,
+				});
 			}
 		}
 		i += 1;
 	}
-	return { response, positions: newObj };
+
+	return { response, positions };
 };
 
-const getPositions = async (catalog, domains) => {
+const getPositions = async (keys, domains) => {
 	const newCatalog = [];
 	// const responseArr = {};
 	let i = 1;
 	const mainWindow = BrowserWindow.fromId(1);
 	// mainWindow.webContents.send("getInfo", `Старт получения позиций`);
+
 	sendInfo(`Старт получения позиций`);
 	store.set("loadingPositions", true);
 	let prevVal;
-	const { catalogLength: length } = catalog;
+	const { catalogLength: length } = keys;
 
-	for (const el of catalog) {
+	let parsing = true;
+
+	ipcMain.on("stopSearchXML", async () => {
+		parsing = false;
+	});
+
+	for (const keyText of keys) {
 		// mainWindow.webContents.send("getInfo", `Позиция ${i} из ${catalog.length}`);
-		sendInfo(`Позиция ${i} из ${catalog.length}`);
-		const phrase = el["Фраза"];
-		const { response: yandexResponse, positions: yandexPositions } = await getYandexPositions(phrase, domains);
-		const { response: googleResponse, positions: googlePositions } = await getGooglePositions(phrase, domains);
+		sendInfo(`Позиция ${i} из ${keys.length}`);
 
-		const newObj = { id: i, Фраза: el["Фраза"], ...yandexPositions, ...googlePositions };
+		const { response: yandexResponse, positions: yandexPositions } = await getYandexPositions(keyText, domains);
+		const { response: googleResponse, positions: googlePositions } = await getGooglePositions(keyText, domains);
 
-		const number = (i / length) * 100;
+		// const newObj = { id: i, Фраза: keyText["Фраза"], ...sortObject({ ...yandexPositions, ...googlePositions }) };
+		const mergedObject = [...yandexPositions, ...googlePositions]
+			.sort((a, b) => {
+				const firstKeyA = Object.keys(a)[0];
+				const firstKeyB = Object.keys(b)[0];
+				return firstKeyA.localeCompare(firstKeyB);
+			})
+			.reduce((acc, obj) => {
+				return { ...acc, ...obj };
+			}, {});
+
+		const newObj = {
+			id: i,
+			Фраза: keyText,
+			...mergedObject,
+		};
+
+		const number = (i / keys.length) * 100;
 		const progress = Math.floor(number * 10) / 10;
 
 		if (progress !== prevVal) {
 			prevVal = progress;
-			mainWindow.webContents.send("getProgress", { current: i, total: catalog.length });
+			mainWindow.webContents.send("getProgress", { current: i, total: keys.length });
 		}
-		// responseArr[el["Фраза"]] = { yandexResponse, googleResponse };
+		// responseArr[keyText["Фраза"]] = { yandexResponse, googleResponse };
 		i += 1;
 		newCatalog.push(newObj);
+		if (!parsing) {
+			break;
+		}
 	}
 	store.set("loadingPositions", false);
 
@@ -128,9 +164,9 @@ const getPositions = async (catalog, domains) => {
 	return newCatalog;
 };
 const createPage3 = (catalog) => {
-	const keyValues = catalog.map((el) => {
-		if (el["Вложенность"]) {
-			return el["Вложенность"];
+	const keyValues = catalog.map((keyText) => {
+		if (keyText["Вложенность"]) {
+			return keyText["Вложенность"];
 		}
 	});
 
@@ -171,7 +207,6 @@ const createPage3 = (catalog) => {
 				// eslint-disable-next-line guard-for-in
 				for (const key in newObj) {
 					const maxLength = 30000;
-
 					const string = newObj[key].toString();
 
 					if (string.length > maxLength) {
@@ -196,7 +231,7 @@ const createPage3 = (catalog) => {
 	});
 
 	const domains = newArr.map((item) => item["Домен"]);
-	store.set("domains", domains);
+	store.set("domains", { all: domains, checked: [] });
 
 	return newArr;
 };
