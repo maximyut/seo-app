@@ -1,18 +1,19 @@
 import MuiAppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
+
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Backdrop, CircularProgress, IconButton } from "@mui/material";
+import { IconButton } from "@mui/material";
 import { useAuthState } from "react-firebase-hooks/auth";
 import SettingsIcon from "@mui/icons-material/Settings";
 
-import { styled, useTheme } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 
 import { auth } from "../../firebase/firebase";
 import AccountMenu from "./AccountMenu";
+import LoadingBackdrop from "./LoadingBackdrop";
 
 const drawerWidth = 500;
 
@@ -96,10 +97,7 @@ const MenuAppBar = ({ handleDrawerOpen, open }) => {
 					)}
 				</Toolbar>
 			</AppBar>
-
-			<Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
-				<CircularProgress color="inherit" />
-			</Backdrop>
+			<LoadingBackdrop loading={loading} />
 		</>
 	);
 };

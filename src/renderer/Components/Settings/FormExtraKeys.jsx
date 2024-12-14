@@ -1,22 +1,10 @@
-import {
-	Button,
-	Checkbox,
-	FormControl,
-	FormControlLabel,
-	FormGroup,
-	FormHelperText,
-	FormLabel,
-	Stack,
-	TextField,
-} from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Checkbox, FormControl, FormControlLabel, Stack } from "@mui/material";
+import { useEffect, useState } from "react";
 
 import OutlinedInput from "@mui/material/OutlinedInput";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import IconButton from "@mui/material/IconButton";
 import AddNew from "../UI/AddNew";
 
 export default function FormExtraKeys({ styles }) {
@@ -71,7 +59,6 @@ export default function FormExtraKeys({ styles }) {
 			setCheckedAll(false);
 		}
 	}, [checkedExtraKeys, extraKeys]);
-
 
 	return (
 		<Stack sx={styles} spacing={2}>

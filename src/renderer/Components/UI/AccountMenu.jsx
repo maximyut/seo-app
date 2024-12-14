@@ -8,10 +8,10 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import HelpIcon from "@mui/icons-material/Help";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import Settings from "@mui/icons-material/Settings";
+
 import Logout from "@mui/icons-material/Logout";
 import { useState } from "react";
-import { Typography } from "@mui/material";
+
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase/firebase";
 

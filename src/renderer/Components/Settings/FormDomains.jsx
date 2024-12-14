@@ -1,16 +1,5 @@
-import {
-	Button,
-	Checkbox,
-	FormControl,
-	FormControlLabel,
-	FormGroup,
-	FormHelperText,
-	FormLabel,
-	Stack,
-	TextField,
-} from "@mui/material";
+import { Checkbox, FormControl, FormControlLabel, FormHelperText, Stack } from "@mui/material";
 import { useEffect, useState } from "react";
-import isValidDomain from "is-valid-domain";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";

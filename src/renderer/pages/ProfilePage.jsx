@@ -13,25 +13,23 @@ export default function ProfilePage() {
 	const premiumRef = doc(db, "users", user.uid, "private", "premium");
 	const [profileData, loadingProfile, errorProfile] = useDocument(profileRef);
 	const [premiumData, loadingPremium, errorPremium] = useDocument(premiumRef);
-	const [XML, setXML] = useState({ userID: "", API_KEY: "" });
-	const handleChange = (event) => {
-		setXML({
-			...XML,
-			[event.target.name]: event.target.value,
+	const userInfo = window.electron.store.get("user");
+
+	const handleSave = async (event) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		const data = {};
+		formData.forEach((value, key) => {
+			data[key] = value;
 		});
+
+		console.log(data);
+		window.electron.store.set("user", data);
+		await setDoc(profileRef, { API: data }, { merge: true });
 	};
-	const handleSave = async () => {
-		window.electron.store.set("XML", XML);
-		await setDoc(profileRef, { XML }, { merge: true });
-	};
-	useEffect(() => {
-		if (profileData) {
-			setXML(profileData.data().XML);
-			window.electron.store.set("XML", profileData.data().XML);
-		}
-	}, [profileData]);
+
 	if (loadingProfile || loadingPremium) {
-		return <div>Loading data...</div>;
+		return <div>Загрузка данных...</div>;
 	}
 
 	if (errorUser || errorProfile || errorPremium) {
@@ -54,21 +52,16 @@ export default function ProfilePage() {
 
 	return (
 		<Stack direction="column" spacing={4}>
-			<Stack direction="column" spacing={2}>
-				{Object.keys(XML).map((key) => (
-					<TextField
-						key={key}
-						variant="standard"
-						label={key}
-						name={key}
-						value={XML[key]}
-						onChange={handleChange}
-					/>
-				))}
-				<Button variant="contained" onClick={handleSave}>
-					Сохранить настройки
-				</Button>
-			</Stack>
+			<form onSubmit={handleSave}>
+				<Stack direction="column" spacing={2}>
+					{Object.keys(userInfo).map((key) => (
+						<TextField key={key} variant="standard" label={key} name={key} defaultValue={userInfo[key]} />
+					))}
+					<Button variant="contained" type="submit">
+						Сохранить настройки
+					</Button>
+				</Stack>
+			</form>
 
 			{premiumData?.data()?.isPremium ? (
 				<div>Ваша подписка закончится {premiumData.data().end.toDate().toLocaleString()}</div>

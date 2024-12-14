@@ -3,8 +3,6 @@
 const cheerio = require("cheerio");
 const PCR = require("puppeteer-chromium-resolver");
 const { ipcMain, BrowserWindow } = require("electron");
-
-const { getCatalogFromExcel, createPage2, createPage3, getPositions } = require("./excelFunc");
 const { default: store, sendInfo } = require("../store");
 
 const countRepeats = (phrase, catalog) => {
@@ -20,21 +18,16 @@ const countRepeats = (phrase, catalog) => {
 };
 
 const getRepeats = (item, catalog) => {
-	// const foundPhrases = await getData(foundPhrasesPath);
-	// let foundPhrases = store.get("foundPhrases");
-
 	const phrase = item["Фраза"];
 	const [repeatedLinks, repeats] = countRepeats(phrase, catalog);
 	item["Количество конкурентов по ключу"] = repeats;
 	item["Повторяющиеся ссылки"] = repeatedLinks;
 
-	// await createJSON([...foundPhrases, phrase], foundPhrasesPath);
-	// store.set("foundPhrases", [...foundPhrases, phrase]);
 	return item;
 };
 
 const getDomainInfo = (link) => {
-	let newLink = link?.split("://")[1];
+	let newLink = link.startsWith("http") ? link?.split("://")[1] : link;
 	newLink = newLink.endsWith("/") ? newLink.slice(0, -1) : newLink;
 	return {
 		Домен: newLink?.split("/")[0],
@@ -42,12 +35,12 @@ const getDomainInfo = (link) => {
 	};
 };
 
-const getPageInfo = async (item, page, mainWindow, config) => {
+const getPageInfo = async (item, page, config) => {
 	let newItem = {};
 	let info = {};
-	let visitedLinks = await store.get("visitedLinks");
+	const visitedLinks = await store.get("visitedLinks");
 
-	const link = item["URL [KS]"];
+	const link = item["URL [KS]"].includes("https") ? item["URL [KS]"] : `https://${item["URL [KS]"]}`;
 	info = { ...getDomainInfo(link) };
 
 	if (!link) {
@@ -55,7 +48,7 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 	}
 	if (link in visitedLinks) {
 		newItem = { ...item, ...visitedLinks[link] };
-		// mainWindow.webContents.send("getInfo", `Ссылка уже обработана`);
+
 		sendInfo(`Ссылка уже обработана`);
 		console.info("Ссылка уже обработана");
 	} else {
@@ -67,7 +60,6 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 
 			// html = (await axios.get(link)).data;
 		} catch (error) {
-			// mainWindow.webContents.send("getInfo", `Страница ${link} недоступна, ${error}`);
 			sendInfo(`Страница ${link} недоступна, ${error}`);
 			console.error(`Страница ${link} недоступна, ${error}`);
 			return item;
@@ -112,38 +104,24 @@ const getPageInfo = async (item, page, mainWindow, config) => {
 	return newItem;
 };
 
-// eslint-disable-next-line prettier/prettier
-const parseItem = async (item, initialCatalog, page, mainWindow, config) => {
+const parseItem = async (item, initialCatalog, page, config) => {
 	await new Promise((resolve) => setTimeout(resolve, 1));
 
 	let newItem = {};
 
 	newItem = getRepeats(item, initialCatalog);
 	try {
-		newItem = await getPageInfo(newItem, page, mainWindow, config);
+		newItem = await getPageInfo(newItem, page, config);
 	} catch (error) {
-		// mainWindow.webContents.send("getInfo", `Ошибка получения информации со страницы: ${error}`);
 		sendInfo(`Ошибка получения информации со страницы: ${error}`);
 		console.error(`Ошибка получения информации со страницы: ${error}`);
 	}
 	return newItem;
 };
 
-const parse = async (filePath, mainWindow, config) => {
+const parse = async (initialCatalog, mainWindow, config) => {
 	const newCatalog = [];
-	let initialCatalog,
-		i = 1;
-
-	try {
-		initialCatalog = await getCatalogFromExcel(filePath);
-
-		store.set("initialCatalog", initialCatalog);
-	} catch (error) {
-		// mainWindow.webContents.send("getInfo", ` Нет каталога, ${error.message}, ${filePath}`);
-		sendInfo(` Нет каталога, ${error.message}, ${filePath}`);
-		console.error(` Нет каталога, ${error}, ${filePath}`);
-		throw error;
-	}
+	let i = 1;
 
 	if (!store.has("visitedLinks")) {
 		store.set("visitedLinks", {});
@@ -163,7 +141,7 @@ const parse = async (filePath, mainWindow, config) => {
 		console.info("Браузер запущен");
 	} catch (error) {
 		console.error(`Ошибка запуска браузера: ${error}`);
-		// mainWindow.webContents.send("getInfo", `Ошибка запуска браузера: ${error.message}`);
+
 		sendInfo(`Ошибка запуска браузера: ${error.message}`);
 	}
 
@@ -174,29 +152,29 @@ const parse = async (filePath, mainWindow, config) => {
 		console.info("Страница открыта");
 	} catch (error) {
 		console.error(`Ошибка открытия страницы: ${error}`);
-		// mainWindow.webContents.send("getInfo", `Ошибка открытия страницы: ${error.message}`);
+
 		sendInfo(`Ошибка открытия страницы: ${error.message}`);
 	}
 
 	let parsing = store.get("parsing"),
 		pausedElement = 0;
 
-	ipcMain.on("stopParsing", async () => {
+	ipcMain.once("stopCreatingMainPage", async () => {
 		parsing = false;
 		pausedElement = store.delete("pausedElement");
 	});
 
 	for (const item of initialCatalog) {
-		// mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length}`)
 		if (i >= pausedElement) {
 			console.info(`Элемент ${i} из ${initialCatalog.length}`);
-			// mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length}`);
+
 			sendInfo(`Элемент ${i} из ${initialCatalog.length}`);
+
 			try {
-				newCatalog.push({ id: i, ...(await parseItem(item, initialCatalog, page, mainWindow, config)) });
+				newCatalog.push({ id: i, ...(await parseItem(item, initialCatalog, page, config)) });
 			} catch (error) {
 				console.error(`Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
-				// mainWindow.webContents.send("getInfo", `Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
+
 				sendInfo(`Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
 				continue;
 			}
@@ -221,78 +199,30 @@ const parse = async (filePath, mainWindow, config) => {
 	return newCatalog;
 };
 
-const startParsing = async (filePath) => {
+const getMainPage = async (initialCatalog) => {
 	console.info(`Старт парсинга`);
 	store.set("parsing", true);
 
 	const mainWindow = BrowserWindow.fromId(1);
 
-	// mainWindow.webContents.send("getInfo", `Старт парсинга`);
 	sendInfo(`Старт парсинга`);
 	const config = store.get("config");
 
-	const pages = {};
-
 	try {
-		const mainCatalog = await parse(filePath, mainWindow, config);
-		pages["Основной каталог"] = mainCatalog;
-
-		mainWindow.webContents.send("getCatalog", pages);
-		store.set("pages", pages);
+		const mainCatalog = await parse(initialCatalog, mainWindow, config);
+		return mainCatalog;
 	} catch (error) {
 		console.error(`Ошибка парсинга: ${error}`);
-		// mainWindow.webContents.send("getInfo", `Ошибка парсинга: ${error}`);
+
 		sendInfo(`Ошибка парсинга: ${error}`);
+		return error;
+	} finally {
+		sendInfo(`Конец парсинга`);
+		console.info(`Конец парсинга`);
+		store.set("parsing", false);
 	}
-
-	// mainWindow.webContents.send("getInfo", `Конец парсинга`);
-	sendInfo(`Конец парсинга`);
-	console.info(`Конец парсинга`);
-	store.set("parsing", false);
-
-	return pages;
 };
 
-ipcMain.handle("createPage2", async () => {
-	const mainCatalog = await store.get("pages.Основной каталог");
-	store.set("pages.Страница 2", createPage2(mainCatalog));
-	return store.get("pages");
-});
-
-ipcMain.handle("createPage3", async () => {
-	if (store.has("pages.Страница 2")) {
-		store.set("pages.Страница 3", createPage3(store.get("pages.Страница 2")));
-	} else {
-		const mainCatalog = store.get("pages.Основной каталог");
-		const page2 = createPage2(mainCatalog);
-		const page3 = createPage3(page2);
-		const pages = {
-			"Основной каталог": mainCatalog,
-			"Страница 2": page2,
-			"Страница 3": page3,
-		};
-		store.set("pages", pages);
-	}
-	return store.get("pages");
-});
-
-ipcMain.handle("getSearchXML", async (event) => {
-	const page2 = await store.get("pages.Страница 2");
-	const currentKeys = [...page2.map((item) => item["Фраза"]), ...store.get("keys.checked")];
-	const extraKeys = store.get("config.extraKeys.checked");
-	const positionsKeys = currentKeys
-		.map((key) => {
-			const arr = [];
-			extraKeys.forEach((el) => arr.push(`${key} ${el}`));
-			return arr;
-		})
-		.flat();
-	const positions = await getPositions(positionsKeys, store.get("domains.checked"));
-	store.set("pages.Позиции", positions);
-	return store.get("pages");
-});
-
 module.exports = {
-	startParsing,
-	sendInfo,
+	getMainPage,
 };

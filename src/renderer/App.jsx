@@ -12,7 +12,9 @@ import HelpPage from "./pages/HelpPage";
 
 export default function App() {
 	const [pages, setPages] = useState(window.electron?.store?.get("pages"));
-
+	window.electron.getCatalog((event, data) => {
+		setPages(data);
+	});
 	return (
 		<MemoryRouter>
 			<PersistentDrawerRight pages={pages} setPages={setPages}>
@@ -25,4 +27,4 @@ export default function App() {
 			</PersistentDrawerRight>
 		</MemoryRouter>
 	);
-} 
+}

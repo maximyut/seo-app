@@ -1,10 +1,10 @@
-import * as React from "react";
 import PropTypes from "prop-types";
 import LinearProgress from "@mui/material/LinearProgress";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import { memo } from "react";
 
-const LinearProgressWithLabel = React.memo(({ current }) => {
+const LinearProgressWithLabel = memo(({ current }) => {
 	return (
 		<Box sx={{ display: "flex", alignItems: "center" }}>
 			<Box sx={{ width: "100%", mr: 1 }}>

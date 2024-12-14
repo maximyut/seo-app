@@ -1,4 +1,3 @@
-import * as React from "react";
 import { styled, useTheme } from "@mui/material/styles";
 
 import Drawer from "@mui/material/Drawer";
@@ -11,6 +10,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MenuAppBar from "./MenuAppBar";
 
 import Settings from "../Settings/Settings";
+import { useState } from "react";
 
 const drawerWidth = 500;
 
@@ -61,7 +61,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 export default function PersistentDrawerRight({ children, pages, setPages }) {
 	const theme = useTheme();
-	const [open, setOpen] = React.useState(false);
+	const [open, setOpen] = useState(false);
 
 	const handleDrawerOpen = () => {
 		setOpen(true);

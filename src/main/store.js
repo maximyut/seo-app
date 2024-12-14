@@ -1,8 +1,12 @@
+import { BrowserWindow } from "electron";
 import ElectronStore from "electron-store";
+
+const pagesNames = ["Исходный каталог", "Основной каталог", "Страница 2", "Страница 3", "Позиции", "KeysSo"];
 
 const schema = {
 	config: {
 		type: "object",
+		default: {},
 		properties: {
 			h1: {
 				type: "boolean",
@@ -23,9 +27,28 @@ const schema = {
 			},
 			domains: {
 				type: "array",
+				default: [],
 				items: {
 					type: "string",
 					format: "url",
+				},
+			},
+			keysSo: {
+				type: "object",
+				default: {},
+				properties: {
+					region: {
+						type: "string",
+						default: "msk",
+					},
+					page: {
+						type: "number",
+						default: 1,
+					},
+					per_page: {
+						type: "number",
+						default: 25,
+					},
 				},
 			},
 		},
@@ -40,6 +63,10 @@ const schema = {
 		type: "string",
 		default: "",
 	},
+	pages: {
+		type: "object",
+		default: {},
+	},
 };
 
 const defaults = {
@@ -51,17 +78,16 @@ const defaults = {
 		messagingSenderId: "815738103955",
 		appId: "1:815738103955:web:39d3c7ccc3cfbbfffe0566",
 	},
-	config: {
-		h1: false,
-		title: false,
-		description: false,
-		breadcrumbs: false,
+
+	user: {
+		XML_userID: "",
+		XML_API_KEY: "",
+		KEYSSO_TOKEN: "",
 	},
 	filePath: "",
 	loadingPositions: false,
 	pausedElement: 0,
 	pages: {},
-	initialCatalog: [],
 	domains: [],
 	consoleInfo: [],
 	visitedLinks: {},
@@ -81,6 +107,10 @@ const sendInfo = async (text) => {
 	store.set("consoleInfo", [info, ...consoleInfo]);
 };
 
-export { sendInfo };
+store.onDidChange("pages", (newPages, oldPages) => {
+	BrowserWindow.fromId(1).webContents.send("getCatalog", newPages);
+});
+
+export { sendInfo, pagesNames };
 
 export default store;

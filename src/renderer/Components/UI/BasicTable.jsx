@@ -38,7 +38,7 @@ const useMutation = () => {
 };
 
 // eslint-disable-next-line react/prop-types
-function BasicTable({ catalog, pageName }) {
+function BasicTable({ catalog, pageName, rowSelectionModel, setRowSelectionModel }) {
 	const updateCatalog = useMutation();
 
 	const [rows, setRows] = useState(catalog);
@@ -194,6 +194,7 @@ function BasicTable({ catalog, pageName }) {
 			},
 		},
 	];
+
 	return (
 		<div style={{ width: "100%", height: "calc(100vh - 250px)" }}>
 			{renderConfirmDialog()}
@@ -217,6 +218,12 @@ function BasicTable({ catalog, pageName }) {
 				slotProps={{
 					toolbar: { setRows },
 				}}
+				checkboxSelection={pageName === "KeysSo"}
+				disableRowSelectionOnClick
+				onRowSelectionModelChange={(newRowSelectionModel) => {
+					setRowSelectionModel(newRowSelectionModel);
+				}}
+				rowSelectionModel={rowSelectionModel}
 			/>
 			{!!snackbar && (
 				<Snackbar open onClose={handleCloseSnackbar} autoHideDuration={4000}>

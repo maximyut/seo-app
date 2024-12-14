@@ -7,7 +7,7 @@ import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormHelperText from "@mui/material/FormHelperText";
 import Checkbox from "@mui/material/Checkbox";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 export default function ConfigForm() {
 	const [config, setConfig] = useState(window.electron.store.get("config"));
@@ -27,15 +27,6 @@ export default function ConfigForm() {
 		});
 	};
 
-	useEffect(() => {
-		if (config.page3 && !config.page2) {
-			handleConfigChange({
-				page2: true,
-			});
-		}
-		window.electron.store.set("config", config);
-	}, [config, handleConfigChange]);
-	
 	return (
 		<Box sx={{ display: "flex" }}>
 			<FormControl component="fieldset" variant="standard">

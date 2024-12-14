@@ -8,17 +8,15 @@
  */
 
 import path from "path";
-import { app, BrowserWindow, shell, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, shell, dialog } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 
 import MenuBuilder from "./menu";
-import { resolveHtmlPath } from "./util";
-import { start } from "./parser/start";
-import { createExcelAndCSV, getOldCatalogFromExcel } from "./parser/excelFunc";
+import { resolveHtmlPath } from "./functions/util";
+
 import store from "./store";
-import sendMail from "./mailer";
-import { error } from "console";
+import "./events";
 
 class AppUpdater {
 	constructor() {
@@ -133,148 +131,12 @@ const createWindow = async () => {
 	new AppUpdater();
 };
 
-const startParsing = (dirPaths) => {
-	start(dirPaths);
-};
-
-async function handleDirOpen() {
-	const { canceled, filePaths } = await dialog.showOpenDialog({
-		properties: ["openFile"],
-		filters: [
-			{
-				name: "Таблица",
-				extensions: ["xlsx", "xls", "xlsb" /* ... other formats ... */],
-			},
-		],
-	});
-
-	if (!canceled) {
-		store.set("filePath", filePaths[0]);
-		startParsing(filePaths[0]);
-		return filePaths[0];
-	}
-
-	return null;
-}
-
-async function handleOpenOldFile() {
-	const { canceled, filePaths } = await dialog.showOpenDialog({
-		properties: ["openFile"],
-		filters: [
-			{
-				name: "Таблица",
-				extensions: ["xlsx", "xls", "xlsb" /* ... other formats ... */],
-			},
-		],
-	});
-
-	if (!canceled) {
-		try {
-			const pages = await getOldCatalogFromExcel(filePaths[0]);
-			store.set("pages", pages);
-			store.set("filePath", filePaths[0]);
-			const domains = pages["Страница 3"].map((item) => item["Домен"]);
-			store.set("domains", { all: domains, checked: [] });
-			mainWindow.webContents.send("getCatalog", pages);
-
-			return {
-				filePath: filePaths[0],
-				error: null,
-			};
-		} catch (error) {
-			console.error(`Ошибка открытия файла: ${error}`);
-			return {
-				filePath: null,
-				error,
-			};
-		}
-	}
-
-	return null;
-}
-
-ipcMain.handle("startParsing", handleDirOpen);
-ipcMain.handle("openOldFile", handleOpenOldFile);
-
-/**
- * Add event listeners...
- */
-
-// IPC listener
-ipcMain.on("electron-store-get", async (event, key) => {
-	event.returnValue = store.get(key);
-});
-ipcMain.on("electron-store-set", async (event, key, val) => {
-	store.set(key, val);
-});
-
-ipcMain.on("electron-store-delete", async (event, key) => {
-	store.delete(key);
-});
-
-ipcMain.on("electron-store-clear", async () => {
-	store.clear();
-});
-
-ipcMain.on("electron-store-getAll", async (event) => {
-	event.returnValue = store.store;
-});
-
-ipcMain.on("electron-store-resetCatalog", async () => {
-	store.reset("filePath", "pages", "domains", "initialCatalog", "visitedLinks", "consoleInfo");
-});
-
-ipcMain.handle("create-excel", async () => {
-	const storedFilePath = store.get("filePath");
-	const dirname = path.dirname(storedFilePath);
-	const basename = path.basename(storedFilePath);
-	let save = false;
-	let cancel = false;
-	let error = false;
-
-	const options = {
-		title: "Сохранить",
-		buttonLabel: "Сохранить как",
-		defaultPath: `${dirname}/Обновленная ${basename}`,
-		filters: [{ name: "All files", extensions: [".xlsx"] }],
-	};
-	const { canceled, filePath } = await dialog.showSaveDialog(options);
-
-	if (!canceled) {
-		await createExcelAndCSV(store.get("pages"), filePath)
-			.then(() => {
-				save = true;
-			})
-			.catch((e) => {
-				error = true;
-				console.log("error", e);
-			});
-	} else {
-		cancel = true;
-	}
-
-	return [save, cancel, error];
-});
-
-ipcMain.on("continueParsing", async () => {
-	startParsing(store.get("filePath"));
-});
-
 app.on("window-all-closed", () => {
 	// Respect the OSX convention of having the application in memory even
 	// after all windows have been closed
 	// if (process.platform !== "darwin") {
 
 	app.quit();
-});
-
-ipcMain.on("sendMail", async (event, args) => {
-	try {
-		const response = await sendMail(args);
-		event.returnValue = { response, error: null };
-	} catch (error) {
-		event.returnValue = { error, response: null };
-	}
 });
 
 app.whenReady()

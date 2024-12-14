@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Drawer, IconButton, List, ListItem, Stack, Typography } from "@mui/material";
+import { Drawer, IconButton, ListItem, Stack, Typography } from "@mui/material";
 import { useState, memo } from "react";
 import { FixedSizeList } from "react-window";
 import CloseIcon from "@mui/icons-material/Close";
@@ -50,6 +50,8 @@ const ConsoleList = () => {
 	);
 
 	const content = data.length === 0 ? emptyText : list;
+	console.log(data);
+
 	return (
 		<Stack direction="row" height="100%" alignItems="flex-start" justifyContent="space-between">
 			{content}

@@ -6,19 +6,17 @@ import FormDomains from "./FormDomains";
 import FormKeys from "./FormKeys";
 import FormExtraKeys from "./FormExtraKeys";
 
-export default function SearchSettings({ pages, setPages }) {
+export default function SearchSettings({ pages }) {
 	const [loadingPositions, setLoadingPositions] = useState(window.electron?.store?.get("loadingPositions"));
 	const [current, setCurrent] = useState(0);
 	const [total, setTotal] = useState();
 	const [error, setError] = useState(false);
 
-	const handleGetSearchXML = async () => {
+	const handleCreatePositionsPage = async () => {
 		setLoadingPositions(true);
 		setCurrent(0);
-
-		const newPages = await window.electron.getSearchXML();
+		const newPages = await window.electron.createPositionsPage();
 		setLoadingPositions(false);
-		setPages(newPages);
 	};
 
 	const percentage = useMemo(() => {
@@ -50,7 +48,7 @@ export default function SearchSettings({ pages, setPages }) {
 
 		return (
 			<Stack>
-				<div>Получение списка поисковых запросов...</div>
+				<div>Получение списка позиций...</div>
 				<ProgressBar current={percentage} />
 				<Button
 					variant="contained"
@@ -70,7 +68,7 @@ export default function SearchSettings({ pages, setPages }) {
 	};
 	return (
 		<Stack spacing={2}>
-			<Button variant="contained" onClick={handleGetSearchXML} disabled={error}>
+			<Button variant="contained" onClick={handleCreatePositionsPage} disabled={error}>
 				Создать страницу позиций
 			</Button>
 
