@@ -1,4 +1,4 @@
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Button, Stack, TextField } from "@mui/material";
@@ -13,6 +13,7 @@ export default function ProfilePage() {
 	const premiumRef = doc(db, "users", user.uid, "private", "premium");
 	const [profileData, loadingProfile, errorProfile] = useDocument(profileRef);
 	const [premiumData, loadingPremium, errorPremium] = useDocument(premiumRef);
+
 	const userInfo = window.electron.store.get("user");
 
 	const handleSave = async (event) => {
@@ -23,7 +24,6 @@ export default function ProfilePage() {
 			data[key] = value;
 		});
 
-		console.log(data);
 		window.electron.store.set("user", data);
 		await setDoc(profileRef, { API: data }, { merge: true });
 	};

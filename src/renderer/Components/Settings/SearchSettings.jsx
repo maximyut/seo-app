@@ -33,7 +33,7 @@ export default function SearchSettings({ pages }) {
 		return <Box>Чтобы получить поисковые запросы, создайте страницу 3</Box>;
 	}
 
-	if (!window.electron.store.get("XML.API_KEY")) {
+	if (!window.electron.store.get("user.XML_API_KEY")) {
 		return <Box>Чтобы получить поисковые запросы, добавьте ключ</Box>;
 	}
 

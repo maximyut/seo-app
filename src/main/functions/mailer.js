@@ -25,4 +25,5 @@ async function sendMail(mail) {
 	return response;
 }
 
+
 export default sendMail;

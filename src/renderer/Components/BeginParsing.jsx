@@ -58,7 +58,6 @@ export default function BeginParsing({ continueParsing }) {
 
 	window.electron.getProgress((event, data) => {
 		setCurrent(data.current);
-
 		if (!total) {
 			setTotal(data.total);
 		}

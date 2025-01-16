@@ -88,6 +88,7 @@ const getYandexPositions = async (phrase, domains) => {
 };
 
 const getPositions = async (keys, domains) => {
+	console.log(keys, domains);
 	const newCatalog = [];
 	let i = 1;
 	const mainWindow = BrowserWindow.fromId(1);

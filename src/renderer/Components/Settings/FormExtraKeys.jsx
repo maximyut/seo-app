@@ -9,9 +9,9 @@ import AddNew from "../UI/AddNew";
 
 export default function FormExtraKeys({ styles }) {
 	const [checkedAll, setCheckedAll] = useState(false);
-	const [extraKeys, setExtaKeys] = useState(window.electron.store.get("config.extraKeys.all") || []);
+	const [extraKeys, setExtaKeys] = useState(window.electron.store.get("extraKeys.all") || []);
 	const [checkedExtraKeys, setCheckedExtraKeys] = useState(
-		window.electron.store.get("config.extraKeys.checked") || [],
+		window.electron.store.get("extraKeys.checked") || [],
 	);
 
 	const handleChange = (event) => {
@@ -23,29 +23,29 @@ export default function FormExtraKeys({ styles }) {
 			// On autofill we get a stringified value.
 			typeof value === "string" ? value.split(",") : value,
 		);
-		window.electron.store.set("config.extraKeys.checked", typeof value === "string" ? value.split(",") : value);
+		window.electron.store.set("extraKeys.checked", typeof value === "string" ? value.split(",") : value);
 	};
 
 	const handleCheckedAll = (event) => {
 		if (event.target.checked) {
 			setCheckedExtraKeys(extraKeys);
-			window.electron.store.set("config.extraKeys.checked", extraKeys);
+			window.electron.store.set("extraKeys.checked", extraKeys);
 		} else {
 			setCheckedExtraKeys([]);
-			window.electron.store.set("config.extraKeys.checked", []);
+			window.electron.store.set("extraKeys.checked", []);
 		}
 		setCheckedAll(event.target.checked);
 	};
 
 	const handleAddExtraKey = (newExtraKey) => {
 		setExtaKeys([...extraKeys, newExtraKey]);
-		window.electron.store.set("config.extraKeys.all", [...extraKeys, newExtraKey]);
+		window.electron.store.set("extraKeys.all", [...extraKeys, newExtraKey]);
 	};
 
 	const handleDeleteExtraKey = (extraKey) => {
 		setExtaKeys(extraKeys.filter((key) => key !== extraKey));
 		window.electron.store.set(
-			"config.extraKeys.all",
+			"extraKeys.all",
 			extraKeys.filter((key) => key !== extraKey),
 		);
 	};

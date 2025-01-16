@@ -25,14 +25,7 @@ const schema = {
 				type: "boolean",
 				default: false,
 			},
-			domains: {
-				type: "array",
-				default: [],
-				items: {
-					type: "string",
-					format: "url",
-				},
-			},
+
 			keysSo: {
 				type: "object",
 				default: {},
@@ -53,6 +46,51 @@ const schema = {
 			},
 		},
 		required: ["h1", "title", "description"],
+	},
+
+	extraKeys: {
+		type: "object",
+		default: {},
+		properties: {
+			all: {
+				type: "array",
+				default: [],
+			},
+			checked: {
+				type: "array",
+				default: [],
+			},
+		},
+	},
+
+	keys: {
+		type: "object",
+		default: {},
+		properties: {
+			all: {
+				type: "array",
+				default: [],
+			},
+			checked: {
+				type: "array",
+				default: [],
+			},
+		},
+	},
+
+	domains: {
+		type: "object",
+		default: {},
+		properties: {
+			all: {
+				type: "array",
+				default: [],
+			},
+			checked: {
+				type: "array",
+				default: [],
+			},
+		},
 	},
 
 	pausedElement: {
@@ -85,10 +123,13 @@ const defaults = {
 		KEYSSO_TOKEN: "",
 	},
 	filePath: "",
+	domains: {
+		all: [],
+		checked: [],
+	},
 	loadingPositions: false,
 	pausedElement: 0,
 	pages: {},
-	domains: [],
 	consoleInfo: [],
 	visitedLinks: {},
 };

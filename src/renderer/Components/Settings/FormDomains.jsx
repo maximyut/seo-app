@@ -39,7 +39,7 @@ export default function FormDomains({ pages, setError, error, styles }) {
 	};
 
 	useEffect(() => {
-		setDomains(window.electron.store.get("domains.all"));
+		setDomains(window.electron.store.get("domains.all") || []);
 	}, [pages]);
 
 	const compareArrays = (arr1, arr2) => arr1.length === arr2.length && arr1.every((v, i) => v === arr2[i]);

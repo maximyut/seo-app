@@ -124,7 +124,7 @@ export default function DomainDialog({ open, setOpen, setDomain }) {
 					const formData = new FormData(event.currentTarget);
 					const formJson = Object.fromEntries(formData.entries());
 					const { domain, page, per_page, region } = formJson;
-					console.log(domain, page, per_page, region);
+
 
 					await window.electron.store.set("config.keysSo", {
 						region,

@@ -50,7 +50,6 @@ const ConsoleList = () => {
 	);
 
 	const content = data.length === 0 ? emptyText : list;
-	console.log(data);
 
 	return (
 		<Stack direction="row" height="100%" alignItems="flex-start" justifyContent="space-between">

@@ -26,11 +26,16 @@ const getRepeats = (item, catalog) => {
 	return item;
 };
 
+const getDomainFromUrl = (url) => {
+	const urlObj = new URL(url);
+	return urlObj.hostname;
+};
+
 const getDomainInfo = (link) => {
 	let newLink = link.startsWith("http") ? link?.split("://")[1] : link;
 	newLink = newLink.endsWith("/") ? newLink.slice(0, -1) : newLink;
 	return {
-		Домен: newLink?.split("/")[0],
+		Домен: getDomainFromUrl(link),
 		Вложенность: newLink.split("/").length,
 	};
 };
@@ -41,6 +46,7 @@ const getPageInfo = async (item, page, config) => {
 	const visitedLinks = await store.get("visitedLinks");
 
 	const link = item["URL [KS]"].includes("https") ? item["URL [KS]"] : `https://${item["URL [KS]"]}`;
+
 	info = { ...getDomainInfo(link) };
 
 	if (!link) {
@@ -95,7 +101,6 @@ const getPageInfo = async (item, page, config) => {
 
 		newItem = { ...item, ...info };
 		visitedLinks[link] = info;
-		console.log(info);
 
 		await store.set("visitedLinks", visitedLinks);
 	}
@@ -178,10 +183,9 @@ const parse = async (initialCatalog, mainWindow, config) => {
 				sendInfo(`Элемент ${i} из ${initialCatalog.length} \n Ошибка: ${error}`);
 				continue;
 			}
-
-			if (i % Math.floor(initialCatalog.length / 100) === 0) {
-				mainWindow.webContents.send("getProgress", { current: i, total: initialCatalog.length });
-			}
+			// if (i % Math.floor(initialCatalog.length / 100) === 0 || i === initialCatalog.length) {
+			mainWindow.webContents.send("getProgress", { current: i, total: initialCatalog.length });
+			// }
 
 			if (!parsing) {
 				break;

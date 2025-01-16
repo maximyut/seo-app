@@ -53,19 +53,30 @@ const createPage3 = (catalog2) => {
 };
 
 const createPositionsPage = async () => {
-	const page2 = await store.get("pages.Страница 2");
-	const currentKeys = [...page2.map((item) => item["Фраза"]), ...store.get("keys.checked")];
-	const extraKeys = store.get("config.extraKeys.checked");
-	const positionsKeys = currentKeys
-		.map((key) => {
-			const arr = [];
-			extraKeys.forEach((el) => arr.push(`${key} ${el}`));
-			return arr;
-		})
-		.flat();
-	const positions = await getPositions(positionsKeys, store.get("domains.checked"));
+	try {
+		const page2 = await store.get("pages.Страница 2");
+		const currentKeys = [...page2.map((item) => item["Фраза"]), ...store.get("keys.checked")];
 
-	store.set("pages.Позиции", positions);
+		const extraKeys = store.get("extraKeys.checked");
+		const positionsKeys = currentKeys
+			.map((key) => {
+				const arr = [];
+				if (extraKeys.length > 0) {
+					extraKeys.forEach((el) => arr.push(`${key} ${el}`));
+				} else {
+					arr.push(key);
+				}
+				return arr;
+			})
+			.flat();
+
+		const positions = await getPositions(positionsKeys, store.get("domains.checked"));
+
+		store.set("pages.Позиции", positions);
+	} catch (error) {
+		console.error(`Ошибка создания страницы позиций: ${error}`);
+		throw error;
+	}
 };
 
 export { createMainPage, createPositionsPage, createKeysSoPage, createPage2, createPage3, getDomains };
