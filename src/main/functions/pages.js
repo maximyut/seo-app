@@ -11,8 +11,15 @@ const getDomains = (catalog3) => {
 
 const createKeysSoPage = async (domain) => {
 	try {
+		const oldPage = store.get("pages.KeysSo") || [];
 		const page = await getKeysSoPhrases(domain);
-		store.set("pages.KeysSo", page);
+		const newArr = [...oldPage, ...page].map((item, i) => {
+			return {
+				...item,
+				id: i + 1,
+			};
+		});
+		store.set("pages.KeysSo", newArr);
 		return page;
 	} catch (error) {
 		console.error(`Ошибка создания KeysSo страницы: ${error}`);
@@ -57,22 +64,19 @@ const createPositionsPage = async () => {
 		const page2 = await store.get("pages.Страница 2");
 		const currentKeys = [...page2.map((item) => item["Фраза"]), ...store.get("keys.checked")];
 
-		const extraKeys = store.get("extraKeys.checked");
+		const extraKeys = ["", ...store.get("extraKeys.checked")];
 		const positionsKeys = currentKeys
 			.map((key) => {
 				const arr = [];
-				if (extraKeys.length > 0) {
-					extraKeys.forEach((el) => arr.push(`${key} ${el}`));
-				} else {
-					arr.push(key);
-				}
+				extraKeys.forEach((el) => arr.push(`${key} ${el}`));
 				return arr;
 			})
 			.flat();
 
+		const oldPositions = store.get("pages.Позиции");
 		const positions = await getPositions(positionsKeys, store.get("domains.checked"));
-
-		store.set("pages.Позиции", positions);
+		const newPositions = [...oldPositions, ...positions];
+		store.set("pages.Позиции", newPositions);
 	} catch (error) {
 		console.error(`Ошибка создания страницы позиций: ${error}`);
 		throw error;

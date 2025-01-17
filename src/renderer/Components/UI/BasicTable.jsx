@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DataGrid, GridActionsCellItem, GridRowEditStopReasons, ruRU } from "@mui/x-data-grid";
 
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
@@ -131,6 +131,10 @@ function BasicTable({ catalog, pageName, rowSelectionModel, setRowSelectionModel
 		// noButtonRef.current?.focus();
 	};
 
+	useEffect(() => {
+		setRows(catalog);
+	}, [catalog]);
+
 	const renderConfirmDialog = () => {
 		if (!promiseArguments) {
 			return null;
@@ -194,7 +198,7 @@ function BasicTable({ catalog, pageName, rowSelectionModel, setRowSelectionModel
 			},
 		},
 	];
-
+	console.log(catalog);
 	return (
 		<div style={{ width: "100%", height: "calc(100vh - 250px)" }}>
 			{renderConfirmDialog()}

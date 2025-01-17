@@ -1,7 +1,7 @@
 import { dialog, ipcMain } from "electron";
 import path from "node:path";
+import os from "os";
 import sendMail from "./functions/mailer";
-
 import { createExcelAndCSV, getCatalogFromExcel, getOldCatalogFromExcel } from "./functions/excelFunc";
 import store from "./store";
 
@@ -78,14 +78,23 @@ ipcMain.handle("create-excel", async () => {
 	const storedFilePath = store.get("filePath");
 	const dirname = path.dirname(storedFilePath);
 	const basename = path.basename(storedFilePath);
+	// eslint-disable-next-line no-nested-ternary
+	const { homedir } = os.userInfo();
+
+	const defaultPath = storedFilePath
+		? `${dirname}/Обновленная ${basename}`
+		: process.platform === "win32"
+			? `${homedir}\\downloads`
+			: `${homedir}/downloads`;
 
 	const options = {
 		title: "Сохранить",
 		buttonLabel: "Сохранить как",
-		defaultPath: `${dirname}/Обновленная ${basename}`,
-		filters: [{ name: "All files", extensions: [".xlsx"] }],
+		defaultPath,
+		filters: [{ name: "Excel", extensions: ["xlsx"] }],
 	};
 	const { canceled, filePath } = await dialog.showSaveDialog(options);
+	console.log(`${dirname}/Обновленная `);
 	if (!canceled) {
 		const res = await createExcelAndCSV(store.get("pages"), filePath);
 		return res;

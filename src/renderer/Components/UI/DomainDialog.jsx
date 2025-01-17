@@ -90,7 +90,6 @@ const DomainInput = ({ error, setError }) => {
 		/>
 	);
 };
-
 const Config = ({ error, setError }) => {
 	return (
 		<Stack spacing={2} direction="column" mt={2}>
@@ -106,50 +105,64 @@ const Config = ({ error, setError }) => {
 	);
 };
 
-export default function DomainDialog({ open, setOpen, setDomain }) {
+export default function DomainDialog({ setLoading }) {
 	const [error, setError] = useState(false);
+	const [open, setOpen] = useState(false);
 
 	const handleClose = () => {
 		setOpen(false);
 	};
 
+	const handleOpenDomainDialog = () => {
+		setOpen(true);
+	};
+
+	const createKeysSoPage = async (domain) => {
+		setLoading(true);
+		await window.electron.createKeysSoPage(domain);
+		setLoading(false);
+	};
+
 	return (
-		<Dialog
-			open={open}
-			onClose={handleClose}
-			PaperProps={{
-				component: "form",
-				onSubmit: async (event) => {
-					event.preventDefault();
-					const formData = new FormData(event.currentTarget);
-					const formJson = Object.fromEntries(formData.entries());
-					const { domain, page, per_page, region } = formJson;
+		<>
+			<Button variant="contained" onClick={handleOpenDomainDialog}>
+				Получить данные из keys.so
+			</Button>
+			<Dialog
+				open={open}
+				onClose={handleClose}
+				PaperProps={{
+					component: "form",
+					onSubmit: async (event) => {
+						event.preventDefault();
+						const formData = new FormData(event.currentTarget);
+						const formJson = Object.fromEntries(formData.entries());
+						const { domain, page, per_page, region } = formJson;
 
+						await window.electron.store.set("config.keysSo", {
+							region,
+							page: Number(page),
+							per_page: Number(per_page),
+						});
+						createKeysSoPage(domain);
 
-					await window.electron.store.set("config.keysSo", {
-						region,
-						page: Number(page),
-						per_page: Number(per_page),
+						handleClose();
+					},
+				}}
+			>
+				<DialogTitle>Получить данные по домену</DialogTitle>
+				<DialogContent>
+					<DialogContentText>Введите домен по которому нужно получить информацию</DialogContentText>
 
-					});
-					setDomain(domain);
-
-					handleClose();
-				},
-			}}
-		>
-			<DialogTitle>Получить данные по домену</DialogTitle>
-			<DialogContent>
-				<DialogContentText>Введите домен по которому нужно получить информацию</DialogContentText>
-
-				<Config error={error} setError={setError} />
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={handleClose}>Отмена</Button>
-				<Button disabled={error} type="submit">
-					Начать
-				</Button>
-			</DialogActions>
-		</Dialog>
+					<Config error={error} setError={setError} />
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleClose}>Отмена</Button>
+					<Button disabled={error} type="submit">
+						Начать
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</>
 	);
 }

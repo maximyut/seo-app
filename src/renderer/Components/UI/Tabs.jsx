@@ -4,10 +4,12 @@ import PropTypes from "prop-types";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import { Button, Stack } from "@mui/material";
+import { Button, ButtonGroup, Stack } from "@mui/material";
 import { useState } from "react";
 import BasicTable from "./BasicTable";
 import BeginParsing from "../BeginParsing";
+
+import DomainDialog from "./DomainDialog";
 
 function a11yProps(index) {
 	return {
@@ -58,7 +60,13 @@ function CustomTabPanel({ value, index, catalogName, pages, setLoading, ...other
 	const renderButton = () => {
 		switch (catalogName) {
 			case "KeysSo":
-				return <CreatingInitialCatalog catalog={chosenRows(pages[catalogName], rowSelectionModel)} />;
+				return (
+					<ButtonGroup>
+						<DomainDialog setLoading={setLoading} />
+
+						<CreatingInitialCatalog catalog={chosenRows(pages[catalogName], rowSelectionModel)} />
+					</ButtonGroup>
+				);
 			case "Исходный каталог":
 				return <BeginParsing />;
 			case "Основной каталог":
@@ -113,7 +121,7 @@ export default function BasicTabs({ pages, setLoading }) {
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
 	};
-
+	console.log(pages);
 	return (
 		<Box sx={{ width: "100%", height: "100%" }}>
 			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>

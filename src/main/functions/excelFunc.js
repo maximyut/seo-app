@@ -131,7 +131,7 @@ const getOldCatalogFromExcel = async (filePath) => {
 
 const createExcelAndCSV = async (pages, filePath) => {
 	const workbook = XLSX.utils.book_new();
-
+	XLSX.set_fs(fs);
 	Object.keys(pages).forEach((catalogName) => {
 		const worksheet = XLSX.utils.json_to_sheet(pages[catalogName]);
 		XLSX.utils.book_append_sheet(workbook, worksheet, catalogName);
@@ -147,7 +147,7 @@ const createExcelAndCSV = async (pages, filePath) => {
 		console.log("Файл не сохранён.", error);
 		// mainWindow.webContents.send("getInfo", `Файл не сохранён: ${error}`);
 		sendInfo(`Файл не сохранён: ${error}`);
-		return error;
+		throw error;
 	}
 };
 
